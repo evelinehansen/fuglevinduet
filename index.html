@@ -157,26 +157,56 @@ body {
 .chip.selected { background: var(--sage-tint); border-color: var(--sage); color: var(--sage-deep); }
 .chip.skip { color: var(--ink-soft); }
 
-/* fargebrikkene har prøven på seg, så ordet ikke er det eneste å gå etter */
-.farge-prikk {
-  width: 0.8rem; height: 0.8rem; border-radius: 50%;
-  border: 1px solid rgba(38, 42, 33, 0.25);
-  display: inline-block; margin-right: 0.45rem; vertical-align: -0.1em;
+/* Fargene er selve prøven, uten ord ved siden av: åtte runde knapper
+   holdes på én linje, der ordene tok to. Navnet ligger i aria-label og
+   title, så det er tilgjengelig for skjermleser og ved å hvile pekeren. */
+.farge-rad { display: flex; flex-wrap: wrap; gap: 0.5rem; margin-top: 0.6rem; }
+.farge-knapp {
+  width: 44px; height: 44px; padding: 4px; border-radius: 50%;
+  border: 2px solid var(--line); background: var(--card); cursor: pointer;
+  display: grid; place-items: center;
+  transition: border-color 0.2s, box-shadow 0.2s, transform 0.25s var(--spring);
 }
+.farge-knapp > span {
+  display: block; width: 100%; height: 100%; border-radius: 50%;
+  border: 1px solid rgba(38, 42, 33, 0.18);
+}
+.farge-knapp:hover { border-color: var(--ink-faint); }
+.farge-knapp:active { transform: scale(0.94); }
+.farge-knapp[aria-pressed="true"] {
+  border-color: var(--sage); box-shadow: 0 0 0 3px var(--sage-tint);
+}
+.farge-knapp:disabled { opacity: 0.4; cursor: default; }
 
+/* ---------- spørsmålene som nedtrekk ----------
+   Alle spørsmålene står framme samtidig, med spørsmålet som hintlinje
+   inne i hvert felt. Da er hele filteret synlig på én gang, og et
+   ubesvart felt er svaret "vet ikke". */
 .sporsmal { font-family: var(--serif); font-weight: 600; font-size: 1.1rem; margin-top: 0.2rem; }
-
-.valgt-rad { display: flex; flex-wrap: wrap; gap: 0.4rem; margin-bottom: 0.9rem; }
-.valgt-merke {
-  font-size: 0.78rem; font-weight: 600; color: var(--sage-deep);
-  background: var(--sage-tint); border: 1px solid var(--sage);
-  border-radius: 999px; padding: 0.2rem 0.6rem;
-  display: inline-flex; align-items: center; gap: 0.35rem;
+/* 240px og ikke mindre: noen av svarene er hele setninger («Gikk nedover
+   stammen med hodet først»), og et felt som klipper svaret er verre enn
+   en kolonne mindre. */
+.sporsmal-rutenett {
+  display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 0.5rem; margin-top: 0.9rem;
 }
-.valgt-merke button {
-  font: inherit; line-height: 1; border: 0; background: none;
-  color: var(--sage-deep); cursor: pointer; padding: 0 0.1rem;
+.velg {
+  font: inherit; font-weight: 600; font-size: 0.85rem;
+  width: 100%; min-height: 44px; cursor: pointer;
+  color: var(--ink-soft); background-color: var(--card);
+  border: 1px solid var(--line); border-radius: 999px;
+  padding: 0.4rem 2.1rem 0.4rem 1rem;
+  appearance: none; -webkit-appearance: none;
+  background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="11" height="7"><path d="M1.2 1.2L5.5 5.5l4.3-4.3" fill="none" stroke="%239A9E90" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></svg>');
+  background-repeat: no-repeat; background-position: right 1rem center;
+  transition: background-color 0.2s, border-color 0.2s, color 0.2s;
 }
+.velg:hover { border-color: var(--ink-faint); }
+.velg.valgt {
+  color: var(--sage-deep); background-color: var(--sage-tint); border-color: var(--sage);
+}
+.velg:disabled { opacity: 0.5; cursor: default; }
+.velg option { color: var(--ink); background: var(--card); }
 
 /* ---------- kandidatliste ---------- */
 .kandidater { list-style: none; margin-top: 1rem; display: grid; gap: 0.5rem; }
@@ -247,9 +277,13 @@ body {
 }
 .obs-rad time { color: var(--ink-faint); }
 
-/* ---------- loggen ---------- */
+/* ---------- loggen ----------
+   Høydene her er reserven. Står spaltene side om side, overstyrer
+   stemAvLoggHoyde() dem med den målte høyden på venstre spalte, slik at
+   observasjonsboksen slutter der de tre boksene ved siden slutter. */
 .logg-liste { list-style: none; display: grid; gap: 0.3rem; margin-top: 0.6rem;
-              max-height: 260px; overflow-y: auto; }
+              max-height: 520px; overflow-y: auto; }
+@media (max-width: 900px) { .logg-liste { max-height: 320px; } }
 .logg-rad { display: flex; align-items: center; gap: 0.6rem; font-size: 0.88rem;
             padding: 0.3rem 0; border-bottom: 1px solid var(--line); }
 .logg-rad time { color: var(--ink-faint); font-size: 0.8rem; margin-left: auto; }
@@ -485,9 +519,13 @@ footer.credits a { color: var(--ink-soft); }
         </button>
         <div id="id-body" hidden></div>
       </section>
+      <section class="card panel" id="mat-panel">
+        <div class="section-h">På matfatet</div>
+        <div id="mat-body"></div>
+      </section>
     </div>
     <section class="card panel" id="log-panel">
-      <div class="section-h">Hagen din</div>
+      <div class="section-h">Observasjoner</div>
       <div id="log-body"></div>
     </section>
   </div>
@@ -2403,7 +2441,6 @@ const state = {
   ungfugl: false,
   frostAar: null,     /* året vi sist meldte fra om første frost */
   idValg: {},         /* egenskapene han har krysset av i nøkkelen */
-  idHoppet: [],       /* egenskaper han svarte "vet ikke" på */
   idApen: false,      /* nøkkelen ligger sammenlagt til han åpner den */
   lagringFeilet: false,
   wx: null,
@@ -3002,12 +3039,15 @@ function ordFor(attr, verdi) {
    10. BESTEMMELSESNØKKELEN
    Rene funksjoner, ingen DOM. PRD §5.
    ============================================================ */
+/* Rekkefølgen her er også rekkefølgen på skjermen: alle spørsmålene står
+   framme samtidig, så den skal være fast. Først hvordan den så ut, så hva
+   den gjorde. Rekkefølgen avgjør ikke lenger hva som blir spurt om. */
 const EGENSKAPER = [
   { n: "storrelse", liste: false, sp: "Hvor stor var den?" },
-  { n: "atferd",    liste: true,  sp: "Hva gjorde den?" },
-  { n: "bryst",     liste: false, sp: "Hvilken farge hadde brystet?" },
   { n: "hode",      liste: false, sp: "Hvordan så hodet ut?" },
-  { n: "nebb",      liste: false, sp: "Hva slags nebb hadde den?" },
+  { n: "bryst",     liste: false, sp: "Hvordan var brystet?" },
+  { n: "nebb",      liste: false, sp: "Hva slags nebb?" },
+  { n: "atferd",    liste: true,  sp: "Hva gjorde den?" },
   { n: "sted",      liste: true,  sp: "Hvor var den?" },
   { n: "for",       liste: true,  sp: "Spiste den noe?" }
 ];
@@ -3061,6 +3101,10 @@ function gevinst(kandidater, attr) {
   return H0 - rest;
 }
 
+/* Hvilket ubesvarte spørsmål deler listen mest akkurat nå. Alle
+   spørsmålene står framme samtidig, så dette bestemmer ikke lenger hva
+   som blir spurt om — det brukes til å peke på det som er mest verdt å
+   svare på, når det er mange kandidater igjen. */
 function nesteSporsmal(kandidater, valg, ungfugl) {
   let best = null, bestG = 0.0001;
   EGENSKAPER.forEach(e => {
@@ -3128,6 +3172,27 @@ const MAT_TIL_DATA = {
 function tiltrekkes(a, mat) {
   const ønsket = new Set(mat.flatMap(m => MAT_TIL_DATA[m] || []));
   return a.for.some(f => ønsket.has(f));
+}
+
+/* Hva utvalget hans faktisk dekker. Denne linjen endrer seg med hver
+   avkryssing, og det er poenget: forslaget under kan stå uendret selv om
+   man krysser av noe nytt, fordi ikke alt låser opp nye arter. Talgboller
+   trekker for eksempel ingen art som ikke også tar solsikkefrø, og da så
+   den grønne boksen ut som om den ikke fikk med seg valget. */
+function matDekning(mat) {
+  const enkelt = mat.filter(m => MAT_TIL_DATA[m].length)
+    .map(m => ({ m, n: ARTER.filter(a => tiltrekkes(a, [m])).length }))
+    .sort((a, b) => b.n - a.n);
+  const sum = ARTER.filter(a => tiltrekkes(a, mat)).length;
+  const linjer = [];
+  if (enkelt.length)
+    linjer.push("Ute nå: " +
+                enkelt.map(e => e.m + " (" + e.n + (e.n === 1 ? " art)" : " arter)")).join(", ") +
+                ". Til sammen " + sum + " av 30 arter.");
+  if (mat.includes("vann"))
+    linjer.push("Vann trekker ingen art av seg selv, men det er ofte det " +
+                "vanskeligste å finne — særlig når alt er frosset.");
+  return linjer;
 }
 
 /* Ett forslag om gangen, aldri en liste over alt han kunne kjøpt. */
@@ -3271,6 +3336,22 @@ function aktivitet(v, sol) {
    14. STELLRÅD
    Ett om gangen. PRD §7.3.
    ============================================================ */
+/* De rådene som ikke henger på været. Ett per dag, i tur og orden: et
+   råd som står uendret i boksen måned etter måned blir et møbel man
+   slutter å lese. */
+const SOMMERRAAD = [
+  "Vann betyr mer enn frø nå. Et grunt fat i skyggen, skiftet daglig, gjør mer for hagen i juli enn en full automat.",
+  "Hekketid. Er det stille ved brettet, har de funnet insekter til ungene, og det er akkurat det de skal.",
+  "Talgboller harskner i varmen. Heng dem i skyggen, og sett ut mindre om gangen.",
+  "Ungfugler fra juli av ligner ingenting i bøkene. Skru på Det var en ungfugl når du bestemmer."
+];
+const AARETRUNDT = [
+  "Rent brett er den billigste sykdomsforebyggingen som finnes. Skyll det innimellom.",
+  "Litt mat på flere steder sprer flokken. Da smitter det mindre enn når alle spiser fra samme fat.",
+  "Frø som ligger igjen og blir vått, mugner. Fyll på oftere med mindre om gangen.",
+  "Har du først begynt, hold det gående. De innretter seg etter brettet ditt, særlig når det er kaldt."
+];
+
 function stellraad(v) {
   const mnd = state.naa.getMonth() + 1;
   if (v && v.temp !== null) {
@@ -3290,9 +3371,15 @@ function stellraad(v) {
     if (v.temp > 5 && v.nedbor > 0.3)
       return "Mildt og vått. Talgboller harskner og frø mugner i slikt vær. Vask brettet og skift ut det som ligger.";
   }
-  if (mnd >= 5 && mnd <= 8)
+  /* Peanøttadvarselen gjelder den som faktisk har nøtter ute. Den sto før
+     i boksen hele sommeren uansett, og et råd som aldri endrer seg blir
+     et møbel man slutter å lese. */
+  if (mnd >= 5 && mnd <= 8 && state.mat.includes("nøtter"))
     return "Hele peanøtter kan sette seg fast i halsen på fugleunger. Bruk nettingautomat nå, så må de ta småbiter.";
-  return "Rent brett er den billigste sykdomsforebyggingen som finnes. Skyll det innimellom.";
+
+  /* Ellers roterer de rådene som ikke henger på været, ett per dag. */
+  const liste = (mnd >= 5 && mnd <= 8) ? SOMMERRAAD : AARETRUNDT;
+  return liste[dagIAret(state.naa) % liste.length];
 }
 
 /* Første harde frost om høsten endrer hele flokken ved brettet.
@@ -3413,20 +3500,23 @@ function settIdApen(apen) {
   document.getElementById("id-head").setAttribute("aria-expanded", apen ? "true" : "false");
   document.getElementById("id-head-hint").textContent =
     apen ? "Lukk" : "Registrer en ny fugl";
+  stemAvLoggHoyde();
 }
 
 /* Fargespørsmålet. Står alltid først, tar flere svar, og bryr seg ikke
-   om hvor på fuglen fargen satt. */
-function tegnFargeRad(rot) {
+   om hvor på fuglen fargen satt. Knappene er bare fargen: åtte ord ved
+   siden av prøvene brøt raden i to på en vanlig skjerm. */
+function tegnFargeRad(rot, myk) {
   const valgt = state.idValg.farger || [];
   rot.appendChild(h("div", { class: "sporsmal" }, "Hvilke farger hadde den?"));
   rot.appendChild(h("p", { class: "panel-lede" },
     "Uansett hvor på fuglen du så dem. Velg gjerne flere."));
-  const brikker = h("div", { class: "chips" });
+  const rad = h("div", { class: "farge-rad" });
   FARGE_REKKE.forEach(f => {
     const av = valgt.includes(f);
+    const navn = ordFor("farger", f);
     const b = h("button", {
-      class: "chip" + (av ? " selected" : ""), type: "button",
+      class: "farge-knapp", type: "button", title: navn, "aria-label": navn,
       "aria-pressed": av ? "true" : "false",
       onclick: () => {
         const nye = (state.idValg.farger || []).filter(x => x !== f);
@@ -3435,16 +3525,59 @@ function tegnFargeRad(rot) {
         tegnAlt();
       }
     });
-    b.appendChild(h("span", { class: "farge-prikk",
-                              style: "background:" + FARGE_PROVE[f] }));
-    b.appendChild(document.createTextNode(ordFor("farger", f)));
-    brikker.appendChild(b);
+    if (myk) b.disabled = true;
+    b.appendChild(h("span", { style: "background:" + FARGE_PROVE[f] }));
+    rad.appendChild(b);
   });
-  rot.appendChild(brikker);
-  if (state.ungfugl && valgt.length)
-    rot.appendChild(h("p", { class: "panel-lede", style: "margin-top:.5rem" },
-      "Ungfugler har ofte helt andre farger enn de voksne, så fargene " +
-      "avgrenser ikke listen så lenge det står ungfugl."));
+  rot.appendChild(rad);
+}
+
+/* Verdiene et nedtrekk skal tilby. Grunnlaget er kandidatene som står
+   igjen når man ser bort fra dette ene spørsmålets eget svar — ellers
+   ville et besvart nedtrekk bare inneholde svaret sitt, og kunne ikke
+   endres til noe annet. */
+function verdierFor(e) {
+  const andre = Object.assign({}, state.idValg);
+  delete andre[e.n];
+  const grunnlag = filtrer(ARTER, andre, state.ungfugl);
+  const s = new Set();
+  grunnlag.forEach(a => {
+    if (e.liste) a[e.n].forEach(v => s.add(v)); else s.add(a[e.n]);
+  });
+  const valgt = state.idValg[e.n];
+  if (valgt !== undefined) s.add(valgt);
+  return [...s].sort((x, y) => ordFor(e.n, x).localeCompare(ordFor(e.n, y), "nb"));
+}
+
+/* Alle spørsmålene som nedtrekk, samtidig. Spørsmålet er hintlinjen i
+   feltet, og et felt man lar stå er svaret "vet ikke". */
+function tegnSporsmal(rot) {
+  const rutenett = h("div", { class: "sporsmal-rutenett" });
+  EGENSKAPER.forEach(e => {
+    const myk = state.ungfugl && MYK_NAR_UNGFUGL.includes(e.n);
+    const valgt = state.idValg[e.n];
+    const felt = h("select", {
+      class: "velg" + (valgt !== undefined ? " valgt" : ""),
+      "aria-label": e.sp,
+      /* de lengste svarene klippes i et smalt felt; hele teksten står i
+         title, i tillegg til i lista når man åpner den */
+      title: valgt !== undefined ? e.sp + " " + ordFor(e.n, valgt) : e.sp,
+      onchange: ev => {
+        if (ev.target.value === "") delete state.idValg[e.n];
+        else state.idValg[e.n] = ev.target.value;
+        tegnAlt();
+      }
+    });
+    if (myk) felt.disabled = true;
+    felt.appendChild(h("option", { value: "" }, e.sp));
+    verdierFor(e).forEach(v => {
+      const o = h("option", { value: v }, ordFor(e.n, v));
+      if (v === valgt) o.selected = true;
+      felt.appendChild(o);
+    });
+    rutenett.appendChild(felt);
+  });
+  rot.appendChild(rutenett);
 }
 
 function tegnIdPanel() {
@@ -3452,38 +3585,41 @@ function tegnIdPanel() {
   rot.textContent = "";
   const mnd = state.naa.getMonth() + 1;
 
-  /* fargene viser valget sitt selv i brikkeraden, så de holdes utenfor her */
-  const valgte = Object.keys(state.idValg).filter(k => k !== "farger");
-  const fargeValg = state.idValg.farger || [];
+  const alleKrav = Object.keys(state.idValg);
 
-  if (!valgte.length && !fargeValg.length)
+  if (!alleKrav.length)
     rot.appendChild(h("p", { class: "panel-lede" },
-      "Begynn med fargene, og svar ellers på det du la merke til. Hopp over " +
-      "det du ikke rakk å se. Appen sier aldri hvilken fugl det var, bare " +
-      "hvilke det kan ha vært."));
+      "Svar på det du la merke til, og la resten stå. Appen sier aldri " +
+      "hvilken fugl det var, bare hvilke det kan ha vært."));
 
-  /* det han allerede har svart */
-  if (valgte.length) {
-    const rad = h("div", { class: "valgt-rad" });
-    valgte.forEach(k => {
-      const m = h("span", { class: "valgt-merke" }, ordFor(k, state.idValg[k]));
-      m.appendChild(h("button", {
-        type: "button", "aria-label": "Fjern " + ordFor(k, state.idValg[k]),
-        onclick: () => { delete state.idValg[k]; tegnAlt(); }
-      }, "×"));
-      rad.appendChild(m);
-    });
-    rot.appendChild(rad);
-  }
+  /* fargene først, så resten av spørsmålene, så bryterne */
+  tegnFargeRad(rot, state.ungfugl);
+  tegnSporsmal(rot);
 
-  tegnFargeRad(rot);
+  const bryter = h("div", { class: "chips" });
+  bryter.appendChild(h("button", {
+    class: "chip" + (state.ungfugl ? " selected" : ""), type: "button",
+    "aria-pressed": state.ungfugl ? "true" : "false",
+    onclick: () => { state.ungfugl = !state.ungfugl; lagre(); tegnAlt(); }
+  }, "Det var en ungfugl"));
+  if (alleKrav.length)
+    bryter.appendChild(h("button", {
+      class: "chip skip", type: "button", onclick: () => { nullstillId(); }
+    }, "Start på nytt"));
+  rot.appendChild(bryter);
+
+  /* Ungfugler ser ofte ikke ut som noe i bøkene, så de tre spørsmålene om
+     farge slås av framfor å lyve om hva de utelukker. */
+  if (state.ungfugl)
+    rot.appendChild(h("p", { class: "panel-lede", style: "margin-top:.6rem" },
+      "Ungfugler har ofte helt andre farger enn de voksne. Så lenge det står " +
+      "ungfugl, avgrenser ikke farge, bryst og hode listen."));
 
   let kandidater = filtrer(ARTER, state.idValg, state.ungfugl);
   let tomtTreff = false;
 
   /* Aldri "ingen treff". Nybegynnere husker farger feil hele tiden,
      så vi slipper det siste kravet og viser de nærmeste i stedet. */
-  const alleKrav = Object.keys(state.idValg);
   if (!kandidater.length && alleKrav.length) {
     tomtTreff = true;
     /* Slipp det nyeste kravet først, så det nest nyeste, helt til noe
@@ -3497,32 +3633,21 @@ function tegnIdPanel() {
     if (!kandidater.length) kandidater = ARTER.slice();
   }
 
-  const spm = nesteSporsmal(kandidater, state.idValg, state.ungfugl);
-  const ferdig = kandidater.length <= 3 || !spm;
+  /* Få kandidater igjen: da er det verdt å vise hva som skiller dem, og
+     hvilken måned de pleier å komme i. */
+  const ferdig = kandidater.length <= 4;
 
   if (tomtTreff)
     rot.appendChild(h("p", { class: "panel-lede", style: "margin-top:.9rem" },
       "Ingen treff på alt samtidig, men disse er nære."));
-
-  if (spm && !ferdig) {
-    rot.appendChild(h("div", { class: "sporsmal" }, spm.sp));
-    const brikker = h("div", { class: "chips" });
-    const verdier = new Set();
-    kandidater.forEach(a => {
-      if (spm.liste) a[spm.n].forEach(v => verdier.add(v));
-      else verdier.add(a[spm.n]);
-    });
-    [...verdier]
-      .sort((a, b) => ordFor(spm.n, a).localeCompare(ordFor(spm.n, b), "nb"))
-      .forEach(v => brikker.appendChild(h("button", {
-        class: "chip", type: "button",
-        onclick: () => { state.idValg[spm.n] = v; tegnAlt(); }
-      }, ordFor(spm.n, v))));
-    brikker.appendChild(h("button", {
-      class: "chip skip", type: "button",
-      onclick: () => { state.idHoppet.push(spm.n); tegnAlt(); }
-    }, "Vet ikke"));
-    rot.appendChild(brikker);
+  else if (!ferdig) {
+    /* Alle spørsmålene er framme, men de er ikke like nyttige. Dette
+       peker på det som deler listen mest akkurat nå. */
+    const spm = nesteSporsmal(kandidater, state.idValg, state.ungfugl);
+    if (spm)
+      rot.appendChild(h("p", { class: "panel-lede", style: "margin-top:.9rem" },
+        kandidater.length + " arter passer så langt. «" + spm.sp +
+        "» deler listen mest herfra."));
   }
 
   /* kandidatlisten */
@@ -3565,20 +3690,8 @@ function tegnIdPanel() {
     liste.appendChild(rad);
   });
   rot.appendChild(liste);
-
-  const bunn = h("div", { class: "chips" });
-  bunn.appendChild(h("button", {
-    class: "chip" + (state.ungfugl ? " selected" : ""), type: "button",
-    "aria-pressed": state.ungfugl ? "true" : "false",
-    onclick: () => { state.ungfugl = !state.ungfugl; lagre(); tegnAlt(); }
-  }, "Det var en ungfugl"));
-  if (alleKrav.length)
-    bunn.appendChild(h("button", {
-      class: "chip skip", type: "button", onclick: () => { nullstillId(); }
-    }, "Start på nytt"));
-  rot.appendChild(bunn);
 }
-function nullstillId() { state.idValg = {}; state.idHoppet = []; tegnAlt(); }
+function nullstillId() { state.idValg = {}; tegnAlt(); }
 
 /* ---------- stamgjestene ---------- */
 /* De tre han ser oftest, med ett trykk for et nytt besøk. Poenget er at
@@ -3717,20 +3830,15 @@ function visArt(id) {
   }
 }
 
-/* ---------- hagen din ---------- */
-function tegnLoggPanel(v) {
-  const rot = document.getElementById("log-body");
+/* ---------- på matfatet ----------
+   Maten er et annet emne enn loggen, og har sin egen boks. */
+function tegnMatPanel(v) {
+  const rot = document.getElementById("mat-body");
   rot.textContent = "";
 
-  if (state.lagringFeilet)
-    rot.appendChild(h("div", { class: "raad" },
-      "Nettleseren nektet å lagre. Det du logger nå blir borte når du lukker fanen. Eksporter for å ta vare på det."));
-
-  /* maten */
-  const mat = h("p", { class: "panel-lede" },
+  rot.appendChild(h("p", { class: "panel-lede" },
     state.mat.length ? "Du tilbyr: " + state.mat.join(", ") + "."
-                     : "Du har ikke sagt hva du tilbyr ennå.");
-  rot.appendChild(mat);
+                     : "Du har ikke sagt hva du tilbyr ennå."));
   const matRad = h("div", { class: "chips" });
   matRad.appendChild(h("button", {
     class: "chip", type: "button", onclick: aapneMat
@@ -3750,6 +3858,16 @@ function tegnLoggPanel(v) {
   /* stellrådet, ett om gangen */
   const frost = forsteFrost(v);
   rot.appendChild(h("div", { class: "raad" }, frost || stellraad(v)));
+}
+
+/* ---------- observasjoner ---------- */
+function tegnLoggPanel() {
+  const rot = document.getElementById("log-body");
+  rot.textContent = "";
+
+  if (state.lagringFeilet)
+    rot.appendChild(h("div", { class: "raad" },
+      "Nettleseren nektet å lagre. Det du logger nå blir borte når du lukker fanen. Eksporter for å ta vare på det."));
 
   /* tallene */
   const arter = new Set(state.obs.map(o => o.art));
@@ -3766,10 +3884,9 @@ function tegnLoggPanel(v) {
   /* loggen. Navnet åpner artsvinduet, der fakta og alle gangene han har
      sett den arten står sammen. */
   rot.appendChild(h("p", { class: "panel-lede", style: "margin-top:.9rem" },
-    "Siste observasjoner. Trykk på navnet for å se arten og alle gangene " +
-    "du har sett den."));
+    "Trykk på navnet for å se arten og alle gangene du har sett den."));
   const liste = h("ul", { class: "logg-liste" });
-  state.obs.slice(0, 40).forEach(o => {
+  state.obs.slice(0, 120).forEach(o => {
     const a = art(o.art);
     if (!a) return;
     const rad = h("li", { class: "logg-rad" });
@@ -3788,6 +3905,26 @@ function tegnLoggPanel(v) {
     liste.appendChild(rad);
   });
   rot.appendChild(liste);
+}
+
+/* Observasjonsboksen skal møte de tre boksene i venstre spalte omtrent i
+   bunnen. Hvor høy venstre spalte blir avhenger av tekst som brytes ulikt
+   fra skjerm til skjerm, så høyden måles etter tegningen framfor å settes
+   til et tall som bare stemmer på én bredde. */
+function stemAvLoggHoyde() {
+  const liste = document.querySelector("#log-body .logg-liste");
+  const spalte = document.querySelector(".col");
+  const panel = document.getElementById("log-panel");
+  if (!liste || !spalte || !panel) return;
+  liste.style.maxHeight = "";
+  /* Bare når spaltene faktisk står side om side, og nøkkelen ligger
+     sammenlagt: en åpen nøkkel gjør venstre spalte langt høyere enn det
+     finnes observasjoner til å fylle. Om de står side om side leses av
+     oppsettet selv, ikke av en bruddbredde som må holdes i takt med CSS. */
+  if (state.idApen || panel.offsetTop !== spalte.offsetTop) return;
+  const rest = panel.getBoundingClientRect().height - liste.getBoundingClientRect().height;
+  const maal = spalte.getBoundingClientRect().height - rest;
+  if (maal > 240) liste.style.maxHeight = Math.round(maal) + "px";
 }
 
 /* ---------- dagsrytmen ---------- */
@@ -3920,8 +4057,16 @@ function tegnMatValg() {
   });
   const følge = document.getElementById("mat-folge");
   følge.textContent = "";
+  const linjer = state.mat.length ? matDekning(state.mat)
+    : ["Ingenting krysset av ennå. Huk av det du har ute, så vet appen hvem " +
+       "som kan komme."];
   const forslag = matforslag(state.mat);
-  if (forslag) følge.appendChild(h("div", { class: "raad" }, forslag));
+  if (forslag) linjer.push(forslag);
+  else if (state.mat.length) linjer.push("Da er alt appen kjenner til dekket.");
+  const boks = h("div", { class: "raad" });
+  linjer.forEach((t, i) =>
+    boks.appendChild(h("div", { style: i ? "margin-top:.5rem" : "" }, t)));
+  følge.appendChild(boks);
 }
 
 /* ---------- er dette normalt ---------- */
@@ -3992,8 +4137,10 @@ function tegnAlt() {
   tegnFugler();
   tegnStamPanel();
   tegnIdPanel();
-  tegnLoggPanel(v);
+  tegnMatPanel(v);
+  tegnLoggPanel();
   tegnRytme();
+  stemAvLoggHoyde();
 
   document.getElementById("season-line").textContent = SESONGLINJE[state.naa.getMonth()];
   document.getElementById("backup-status").textContent = backupTekst();
@@ -4088,6 +4235,8 @@ function start() {
   state.wxStatus = state.wx ? "ok" : "idle";
   tegnAlt();
   hentVaer(false);          /* gjør ingenting hvis bufferet er under en time gammelt */
+
+  window.addEventListener("resize", stemAvLoggHoyde);
 
   setInterval(() => { state.naa = new Date(); tegnAlt(); }, 60000);
   setInterval(() => hentVaer(false), 15 * 60000);

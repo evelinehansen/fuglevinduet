@@ -15,12 +15,14 @@ window. The interface is in Norwegian throughout.
 - **Birds you log appear in the scene**, each at its own perch. Species
   you have not seen yet stand as faint outlines where they would sit.
   Clicking a bird logs it.
-- **An identification key**, folded away until you open it. It starts
-  with colour — which colours you saw at all, anywhere on the bird, as
-  many as you like — and then asks about whatever best separates the
-  remaining candidates. It never asserts which bird you saw. It shows
-  which ones it could have been and what tells them apart. "Vet ikke" is
-  always a valid answer.
+- **An identification key**, folded away until you open it. Every
+  question is on screen at once — colour as a row of swatches, the rest as
+  dropdowns with the question itself as the hint line — so the whole
+  filter is visible in one glance and can be answered in any order. A
+  field you leave alone is "don't know". While the list is still long the
+  key says which unanswered question would divide it most, which is the
+  one worth answering next. It never asserts which bird you saw. It shows
+  which ones it could have been and what tells them apart.
 - **Stamgjester**, the three species you have seen most often, with one
   button each for another visit. The common case — the same bird as
   yesterday — does not send you back through the key.
@@ -29,12 +31,15 @@ window. The interface is in Norwegian throughout.
   every time you have seen that species, in the same place.
 - **Juvenile plumage.** In late summer a large share of the birds at a
   feeder are juveniles that match nothing in any book. Switching on "Det
-  var en ungfugl" stops head and breast colour from excluding species.
+  var en ungfugl" stops colour, head and breast from excluding species —
+  those three inputs grey out rather than pretend to filter.
 - **Activity at the feeder** as four words, never a number or a
   percentage: Rolig, Vanlig, Livlig, Svært livlig. Derived from cold,
   snow cover, wind, precipitation, barometric trend, and how long it has
   been since sunrise.
-- **Care prompts** that follow the weather, one at a time.
+- **Care prompts** that follow the weather, one at a time, and rotate
+  daily when the weather has nothing to say. Advice tied to a particular
+  food only appears when that food is out.
 - **Daily rhythm.** Every sighting stores its timestamp. After a few
   weeks the distribution across the day is drawn for this garden alone.
 
