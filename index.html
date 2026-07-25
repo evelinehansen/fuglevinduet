@@ -1,0 +1,3707 @@
+<!DOCTYPE html>
+<html lang="nb">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Fuglevinduet</title>
+<link rel="icon" type="image/png" href="icon.png">
+<link rel="apple-touch-icon" href="icon.png">
+<style>
+/* ============================================================
+   Fuglevinduet
+   Ett HTML-dokument. Ingen rammeverk, ingen byggesteg.
+   Bildene i birds/ er de eneste eksterne filene.
+   ============================================================ */
+
+:root {
+  --bg: #FAFAF7;          --card: #FFFFFF;
+  --ink: #262A21;         --ink-soft: #6D7263;    --ink-faint: #9A9E90;
+  --sage: #647F5E;        --sage-deep: #4C6447;   --sage-tint: #ECF1E9;
+  --sage-bright: #7CAB66; --sage-bright-deep: #5E8B4C; --sage-bright-tint: #EAF3E2;
+  --clay: #B96F4E;        --clay-deep: #97572F;   --clay-tint: #F7EBE3;
+  --line: #E7E5DA;        --track: #EDECE2;       --scrim: rgba(38, 42, 33, 0.35);
+
+  /* Skallet holder familiebredden. Bare scenen og panelene under den
+     får bruke den brede rammen (den ene sanksjonerte unntaket). */
+  --page-max: 880px;
+  --wide-max: 1240px;
+  --page-pad: 24px;
+  --measure: 62ch;
+
+  --radius: 16px;
+  --shadow: 0 10px 30px rgba(44, 48, 36, 0.08);
+  --shadow-big: 0 24px 70px rgba(44, 48, 36, 0.18);
+  --spring: cubic-bezier(0.32, 1.3, 0.5, 1);
+
+  --font: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
+          "Helvetica Neue", Arial, sans-serif;
+  --serif: ui-serif, Georgia, "Times New Roman", serif;
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+[hidden] { display: none !important; }
+body {
+  font-family: var(--font);
+  background: var(--bg);
+  color: var(--ink);
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+}
+
+.app  { max-width: var(--page-max); margin-inline: auto; padding-inline: var(--page-pad); }
+.wide { max-width: var(--wide-max); margin-inline: auto; padding-inline: var(--page-pad); }
+
+/* ---------- skall ---------- */
+.app-header {
+  display: flex; align-items: center; justify-content: space-between;
+  flex-wrap: wrap; gap: 0.5rem;
+  padding-block: 1.1rem 0.9rem;
+}
+.app-title { font-weight: 800; font-size: 1.5rem; letter-spacing: -0.01em; }
+.app-title-accent { color: var(--sage); }
+.header-right { display: flex; align-items: center; gap: 0.5rem; flex-wrap: wrap; }
+.backup-status { color: var(--ink-soft); font-size: 0.85rem; }
+@media (max-width: 719px) {
+  .header-right { width: 100%; justify-content: flex-start; }
+}
+
+.btn {
+  font: inherit; font-weight: 600; font-size: 0.9rem;
+  color: var(--ink); background: var(--card);
+  border: 1px solid var(--line); border-radius: 999px;
+  padding: 0.5rem 1rem; min-height: 44px; cursor: pointer;
+  transition: background 0.2s, border-color 0.2s,
+              transform 0.25s var(--spring), box-shadow 0.25s;
+}
+.btn:hover { border-color: var(--ink-faint); }
+.btn:active { transform: scale(0.97); }
+.btn:disabled { opacity: 0.45; cursor: default; }
+.btn.small { min-height: 36px; padding: 0.25rem 0.8rem; font-size: 0.85rem; }
+.btn.primary { background: var(--sage); border-color: var(--sage); color: #FFFFFF; }
+.btn.primary:hover { background: var(--sage-deep); border-color: var(--sage-deep); }
+.btn.ghost { background: transparent; }
+.btn.danger { color: var(--clay-deep); border-color: var(--clay-tint); background: transparent; }
+.btn.danger:hover { background: var(--clay-tint); border-color: var(--clay); }
+
+.card {
+  background: var(--card); border: 1px solid var(--line);
+  border-radius: var(--radius); box-shadow: var(--shadow);
+}
+.section-h {
+  font-size: 0.78rem; font-weight: 700;
+  text-transform: uppercase; letter-spacing: 0.06em;
+  color: var(--ink-faint);
+}
+
+/* ---------- scenen ---------- */
+.scene-frame {
+  position: relative;
+  border-radius: var(--radius);
+  overflow: hidden;
+  box-shadow: var(--shadow);
+  background: #16243c;
+}
+#scene { display: block; width: 100%; height: auto; }
+#scene .hit { cursor: pointer; }
+.bird-img { transition: opacity 0.6s ease; }
+
+/* ---------- linjen under scenen ---------- */
+.scene-status {
+  display: flex; flex-wrap: wrap; align-items: baseline; gap: 0.35rem 1.4rem;
+  padding: 0.85rem 0.2rem 0;
+}
+.season-line { font-family: var(--serif); font-weight: 600; font-size: 1.05rem; }
+.status-meta { color: var(--ink-soft); font-size: 0.88rem; }
+.status-meta b { font-weight: 600; color: var(--ink); }
+
+/* ---------- rutenettet under scenen ---------- */
+.panels {
+  display: grid;
+  grid-template-columns: minmax(0, 1.35fr) minmax(0, 1fr);
+  gap: 1.1rem;
+  margin-top: 1.1rem;
+  align-items: start;
+}
+@media (max-width: 900px) { .panels { grid-template-columns: minmax(0, 1fr); } }
+.panel { padding: 1.1rem 1.2rem 1.2rem; }
+.panel > .section-h { margin-bottom: 0.55rem; }
+.panel-lede { color: var(--ink-soft); font-size: 0.9rem; max-width: var(--measure); }
+
+/* ---------- brikker og valg ---------- */
+.chips { display: flex; flex-wrap: wrap; gap: 0.45rem; margin-top: 0.7rem; }
+.chip {
+  font: inherit; font-weight: 600; font-size: 0.85rem;
+  color: var(--ink); background: var(--card);
+  border: 1px solid var(--line); border-radius: 999px;
+  padding: 0.4rem 0.9rem; min-height: 44px; cursor: pointer;
+  transition: background 0.2s, border-color 0.2s, color 0.2s;
+}
+.chip:hover { border-color: var(--ink-faint); }
+.chip.selected { background: var(--sage-tint); border-color: var(--sage); color: var(--sage-deep); }
+.chip.skip { color: var(--ink-soft); }
+
+.sporsmal { font-family: var(--serif); font-weight: 600; font-size: 1.1rem; margin-top: 0.2rem; }
+
+.valgt-rad { display: flex; flex-wrap: wrap; gap: 0.4rem; margin-bottom: 0.9rem; }
+.valgt-merke {
+  font-size: 0.78rem; font-weight: 600; color: var(--sage-deep);
+  background: var(--sage-tint); border: 1px solid var(--sage);
+  border-radius: 999px; padding: 0.2rem 0.6rem;
+  display: inline-flex; align-items: center; gap: 0.35rem;
+}
+.valgt-merke button {
+  font: inherit; line-height: 1; border: 0; background: none;
+  color: var(--sage-deep); cursor: pointer; padding: 0 0.1rem;
+}
+
+/* ---------- kandidatliste ---------- */
+.kandidater { list-style: none; margin-top: 1rem; display: grid; gap: 0.5rem; }
+.kandidat {
+  display: grid; grid-template-columns: 56px minmax(0,1fr) auto;
+  gap: 0.8rem; align-items: center;
+  border: 1px solid var(--line); border-radius: 12px; padding: 0.55rem 0.7rem;
+  background: var(--bg);
+}
+.kandidat img { width: 56px; height: 56px; object-fit: contain; }
+.kandidat-navn { font-family: var(--serif); font-weight: 600; font-size: 1rem; }
+.kandidat-merke { font-size: 0.84rem; color: var(--ink-soft); }
+.kandidat-flagg { font-size: 0.78rem; color: var(--clay-deep); }
+
+/* ---------- loggen ---------- */
+.logg-liste { list-style: none; display: grid; gap: 0.3rem; margin-top: 0.6rem;
+              max-height: 260px; overflow-y: auto; }
+.logg-rad { display: flex; align-items: center; gap: 0.6rem; font-size: 0.88rem;
+            padding: 0.3rem 0; border-bottom: 1px solid var(--line); }
+.logg-rad time { color: var(--ink-faint); font-size: 0.8rem; margin-left: auto; }
+.logg-slett { font: inherit; border: 0; background: none; cursor: pointer;
+              color: var(--clay-deep); font-size: 0.9rem; padding: 0 0.3rem; }
+
+.stat-rad { display: flex; flex-wrap: wrap; gap: 0.9rem; margin-top: 0.6rem; }
+.stat { font-size: 0.85rem; color: var(--ink-soft); }
+.stat b { font-family: var(--serif); font-size: 1.15rem; color: var(--ink); font-weight: 600; }
+
+.raad {
+  margin-top: 0.9rem; padding: 0.7rem 0.85rem;
+  background: var(--sage-tint); border: 1px solid var(--sage);
+  border-radius: 12px; font-size: 0.88rem; color: var(--sage-deep);
+  max-width: var(--measure);
+}
+.aktivitet { display: inline-flex; align-items: baseline; gap: 0.4rem; }
+.aktivitet b { font-family: var(--serif); font-weight: 600; }
+
+/* ---------- dagsrytme ---------- */
+.rytme { margin-top: 1.1rem; padding: 1.1rem 1.2rem 1.2rem; }
+.rytme-graf { display: grid; grid-template-columns: repeat(24, 1fr); gap: 2px;
+              align-items: end; height: 120px; margin-top: 0.8rem; }
+.rytme-sokyle { background: var(--sage); border-radius: 3px 3px 0 0; min-height: 2px; }
+.rytme-akse { display: grid; grid-template-columns: repeat(24, 1fr); gap: 2px;
+              font-size: 0.62rem; color: var(--ink-faint); margin-top: 0.25rem; text-align: center; }
+
+/* ---------- dialoger ---------- */
+.modal-backdrop {
+  position: fixed; inset: 0; background: var(--scrim);
+  z-index: 50; display: flex; align-items: center; justify-content: center;
+  padding: 1.2rem;
+}
+.modal {
+  background: var(--card); border-radius: var(--radius);
+  box-shadow: var(--shadow-big); padding: 1.4rem;
+  max-width: 520px; width: 100%; max-height: 85vh; overflow-y: auto;
+}
+.modal h2 { font-family: var(--serif); font-weight: 600; font-size: 1.25rem; margin-bottom: 0.7rem; }
+.modal p { font-size: 0.9rem; color: var(--ink-soft); margin-bottom: 0.8rem; }
+.modal h3 { font-size: 0.95rem; font-weight: 700; margin: 0.9rem 0 0.2rem; }
+.modal-close { margin-top: 0.9rem; }
+.dedikasjon { font-family: var(--serif); font-size: 1.05rem; color: var(--ink);
+              line-height: 1.7; margin-bottom: 1rem; }
+
+footer.credits {
+  color: var(--ink-faint); font-size: 0.8rem;
+  padding-block: 1.6rem 3rem; text-align: center;
+  display: flex; flex-wrap: wrap; gap: 0.6rem 1rem;
+  align-items: center; justify-content: center;
+}
+footer.credits a { color: var(--ink-soft); }
+
+@media (prefers-reduced-motion: reduce) {
+  * { animation-duration: 0.001ms !important; transition-duration: 0.001ms !important; }
+}
+</style>
+</head>
+<body>
+
+<div class="app">
+  <header class="app-header">
+    <h1 class="app-title">Fugle<span class="app-title-accent">vinduet</span></h1>
+    <div class="header-right">
+      <span id="backup-status" class="backup-status">Sist sikkerhetskopi: aldri</span>
+      <button id="export-btn" class="btn">Eksporter</button>
+      <button id="import-btn" class="btn">Importer</button>
+      <input id="import-file" type="file" accept="application/json" hidden>
+      <button id="about-btn" class="btn ghost small">Om</button>
+    </div>
+  </header>
+</div>
+
+<main class="wide">
+  <div class="scene-frame">
+    <svg id="scene" viewBox="0 0 1200 620" role="img"
+         aria-label="Illustrert hageutsikt som endrer seg med årstid, dagslys og vær">
+      <defs>
+        <linearGradient id="skyGrad" x1="0" y1="0" x2="0" y2="1">
+          <stop id="skyTop" offset="0"    stop-color="#7fb0da"/>
+          <stop id="skyMid" offset="0.62" stop-color="#a9cbe6"/>
+          <stop id="skyBot" offset="1"    stop-color="#cfe3f2"/>
+        </linearGradient>
+        <linearGradient id="groundGrad" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0" stop-color="#7d8a5c"/>
+          <stop offset="1" stop-color="#5c6743"/>
+        </linearGradient>
+        <linearGradient id="snowGrad" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0" stop-color="#eef3f7"/>
+          <stop offset="1" stop-color="#c8d5e0"/>
+        </linearGradient>
+        <radialGradient id="sunGlow">
+          <stop offset="0"   stop-color="#fff3d0" stop-opacity="0.85"/>
+          <stop offset="0.5" stop-color="#ffd98a" stop-opacity="0.28"/>
+          <stop offset="1"   stop-color="#ffd98a" stop-opacity="0"/>
+        </radialGradient>
+        <clipPath id="skyClip"><rect x="0" y="0" width="1200" height="452"/></clipPath>
+        <!-- silhuett: kaster bort fargen, beholder alfakanalen -->
+        <filter id="flat" x="-5%" y="-5%" width="110%" height="110%">
+          <feColorMatrix type="matrix" values="0 0 0 0 0.13
+                                               0 0 0 0 0.15
+                                               0 0 0 0 0.11
+                                               0 0 0 1 0"/>
+        </filter>
+      </defs>
+
+      <!-- 1. himmel -->
+      <rect x="0" y="0" width="1200" height="452" fill="url(#skyGrad)"/>
+      <g id="stars" clip-path="url(#skyClip)" opacity="0"></g>
+      <g id="celestial" clip-path="url(#skyClip)">
+        <circle id="sunGlow" cx="600" cy="200" r="130" fill="url(#sunGlow)"/>
+        <circle id="sunDisc" cx="600" cy="200" r="26" fill="#fff0c4"/>
+        <g id="moon" opacity="0">
+          <circle id="moonDisc" cx="600" cy="200" r="19" fill="#e8eef5"/>
+          <circle id="moonBite" cx="609" cy="193" r="16" fill="#16243c" opacity="0.55"/>
+        </g>
+      </g>
+
+      <!-- 2. skydekke -->
+      <g id="clouds" clip-path="url(#skyClip)" opacity="0.35"></g>
+
+      <!-- 3. bakgrunn: åsrygg, naboskog og et par hus -->
+      <g id="backdrop">
+        <path d="M0 396 C 140 366, 260 384, 380 374 C 500 364, 580 390, 700 382
+                 C 830 374, 950 394, 1070 378 C 1130 370, 1170 382, 1200 378 L1200 452 L0 452 Z"
+              fill="#8b9a90" opacity="0.5"/>
+        <g id="treeline" fill="#5c6f60" opacity="0.6"></g>
+        <g id="houses" fill="#5d6a63" opacity="0.72">
+          <rect x="196" y="392" width="56" height="30"/><path d="M190 392 L224 372 L258 392 Z"/>
+          <rect x="742" y="394" width="62" height="28"/><path d="M736 394 L773 375 L810 394 Z"/>
+          <rect x="1130" y="398" width="44" height="24"/><path d="M1124 398 L1152 384 L1180 398 Z"/>
+        </g>
+        <g id="houseLights" opacity="0">
+          <rect x="208" y="400" width="10" height="11" fill="#f5d99f"/>
+          <rect x="232" y="400" width="10" height="11" fill="#f5d99f"/>
+          <rect x="756" y="402" width="11" height="11" fill="#f5d99f"/>
+          <rect x="1142" y="404" width="9" height="10" fill="#f5d99f"/>
+        </g>
+      </g>
+
+      <!-- 4. bakken -->
+      <rect id="ground" x="0" y="440" width="1200" height="180" fill="url(#groundGrad)"/>
+      <path id="groundEdge" d="M0 440 C 180 432, 340 448, 520 440 C 700 432, 880 448, 1060 440
+                               C 1130 437, 1170 442, 1200 440 L1200 460 L0 460 Z" fill="#6b7850" opacity="0.5"/>
+      <g id="snowGround" opacity="0">
+        <path d="M0 446 C 180 436, 340 452, 520 443 C 700 434, 880 452, 1060 442
+                 C 1130 439, 1170 444, 1200 442 L1200 620 L0 620 Z" fill="url(#snowGrad)"/>
+      </g>
+
+      <!-- 5. gjerdet -->
+      <g id="fence" stroke="#7a6a52" fill="#8b7a5f">
+        <g id="fencePosts"></g>
+        <rect x="0" y="404" width="1200" height="7" rx="2"/>
+        <rect x="0" y="426" width="1200" height="7" rx="2"/>
+      </g>
+      <g id="snowFence" opacity="0" fill="#eef3f7">
+        <rect x="0" y="401" width="1200" height="4" rx="2"/>
+        <rect x="0" y="423" width="1200" height="4" rx="2"/>
+      </g>
+
+      <!-- 6-8. trærne. Formene bygges i JS, fordi grentuppene også er
+           det fuglene sitter på: da kan ingen fugl havne i løse lufta. -->
+      <g id="spruce"></g>
+      <g id="snowSpruce" opacity="0"></g>
+      <g id="pine"></g>
+      <g id="snowPine" opacity="0"></g>
+      <g id="rowan"></g>
+      <g id="rowanLeaves" opacity="0"></g>
+      <g id="rowanBerries" opacity="0"></g>
+      <g id="birch"></g>
+      <g id="birchLeaves" opacity="0"></g>
+      <g id="snowBranch" opacity="0"></g>
+
+      <!-- 9. mateplassen. Klikkbar. -->
+      <g id="feeder" class="hit" role="button" tabindex="0"
+         aria-label="Fuglebrettet. Klikk for å velge hva du tilbyr.">
+        <rect x="638" y="150" width="4" height="84" fill="#6f6250"/>
+        <path d="M640 234 m -46 24 L 640 232 L 686 258 Z" fill="#8a6f4e"/>
+        <path d="M594 258 L640 232 L686 258 L686 264 L594 264 Z" fill="#7a6142"/>
+        <rect x="612" y="262" width="56" height="58" rx="4"
+              fill="#cbbb96" opacity="0.45" stroke="#8a6f4e" stroke-width="3"/>
+        <g id="feedFill"></g>
+        <rect x="586" y="318" width="108" height="9" rx="3" fill="#8a6f4e"/>
+        <rect x="584" y="324" width="112" height="5" rx="2" fill="#6f5940"/>
+        <rect x="566" y="336" width="148" height="5" rx="2.5" fill="#7a6142"/>
+        <g id="feedExtras"></g>
+      </g>
+      <g id="snowFeeder" opacity="0" fill="#eef3f7">
+        <path d="M597 256 L640 232 L683 256 Z"/>
+        <rect x="588" y="314" width="104" height="6" rx="3"/>
+      </g>
+
+      <!-- 10. tistelbedet, stillitsens plass -->
+      <g id="thistles"></g>
+      <g id="groundCover"></g>
+
+      <!-- 11. fuglene -->
+      <g id="birdLayer"></g>
+
+      <!-- 12. lys og vær foran alt -->
+      <rect id="warmVeil"  x="0" y="0" width="1200" height="620" fill="#f2a45c" opacity="0" style="mix-blend-mode:multiply"/>
+      <rect id="nightVeil" x="0" y="0" width="1200" height="620" fill="#101d34" opacity="0"/>
+      <g id="precip"></g>
+    </svg>
+  </div>
+
+  <div class="scene-status">
+    <span id="season-line" class="season-line"></span>
+    <span id="status-meta" class="status-meta"></span>
+  </div>
+
+  <div class="panels">
+    <section class="card panel" id="id-panel">
+      <div class="section-h">Hvilken fugl var det?</div>
+      <div id="id-body"></div>
+    </section>
+    <section class="card panel" id="log-panel">
+      <div class="section-h">Hagen din</div>
+      <div id="log-body"></div>
+    </section>
+  </div>
+
+  <section class="card rytme" id="rytme-panel">
+    <div class="section-h">Dagsrytme</div>
+    <div id="rytme-body"></div>
+  </section>
+
+  <footer class="credits">
+    <button id="normalt-btn" class="btn ghost small">Er dette normalt?</button>
+    <button id="gave-btn" class="btn ghost small">Om denne gaven</button>
+    <span id="wx-credit"></span>
+  </footer>
+</main>
+
+<!-- ---------- dialoger ---------- -->
+<div id="about-modal" class="modal-backdrop" hidden>
+  <div class="modal" role="dialog" aria-modal="true" aria-label="Om Fuglevinduet">
+    <h2>Om Fuglevinduet</h2>
+    <p>Fuglevinduet viser hagen slik den er akkurat nå: himmelen følger den
+      virkelige solhøyden på Tjøme, løvet følger årstiden, og været hentes
+      på nytt en gang i timen.</p>
+    <p>Fuglene i scenen er de du har logget. De blasse omrissene er arter du
+      ennå ikke har sett, men som kan komme.</p>
+    <p>Appen gjetter aldri på hvilken fugl du så. Den sorterer ut hvilke det
+      kan ha vært, og viser hva som skiller dem.</p>
+    <h3>Personvern</h3>
+    <p>Alt du logger blir liggende i denne nettleseren, på denne maskinen.
+      Ingenting sendes noe sted. Det eneste appen henter utenfra er været.
+      Data i nettleseren kan bli slettet av nettleseren selv, så bruk
+      Eksporter innimellom hvis du vil ta vare på loggen.</p>
+    <button class="btn modal-close">Lukk</button>
+  </div>
+</div>
+
+<div id="mat-modal" class="modal-backdrop" hidden>
+  <div class="modal" role="dialog" aria-modal="true" aria-label="Hva tilbyr du?">
+    <h2>Hva tilbyr du nå?</h2>
+    <p>Det du har ute avgjør hvem som kommer. Huk av det som står i hagen.</p>
+    <div id="mat-valg" class="chips"></div>
+    <div id="mat-folge"></div>
+    <button class="btn modal-close">Lukk</button>
+  </div>
+</div>
+
+<div id="normalt-modal" class="modal-backdrop" hidden>
+  <div class="modal" role="dialog" aria-modal="true" aria-label="Er dette normalt?">
+    <h2>Er dette normalt?</h2>
+    <p>Ting som ser urovekkende ut ved fuglebrettet, og som stort sett ikke er det.</p>
+    <div id="normalt-liste"></div>
+    <button class="btn modal-close">Lukk</button>
+  </div>
+</div>
+
+<div id="gave-modal" class="modal-backdrop" hidden>
+  <div class="modal" role="dialog" aria-modal="true" aria-label="Om denne gaven">
+    <h2>Om denne gaven</h2>
+    <p class="dedikasjon">27.07.2026: Til verdens beste Pappa. Takk for at du
+      lytter til all kvitringen min, og forteller meg om alle fuglene du får
+      besøk av! Stor klem fra Eveline</p>
+    <button class="btn modal-close">Lukk</button>
+  </div>
+</div>
+
+<script id="arter-data" type="application/json">
+[
+ {
+  "id": "kjottmeis",
+  "navn": "Kjøttmeis",
+  "storrelse": "mindre_enn_spurv",
+  "atferd": [
+   "henger_opp_ned",
+   "flokk",
+   "tar_fro_og_flyr_vekk"
+  ],
+  "bryst": "gult_med_svart_stripe",
+  "hode": "svart_hvit",
+  "nebb": "tykt_kjegleformet",
+  "sted": [
+   "mateplass",
+   "trekrone",
+   "trestamme"
+  ],
+  "sesong": [
+   1,
+   2,
+   3,
+   4,
+   5,
+   6,
+   7,
+   8,
+   9,
+   10,
+   11,
+   12
+  ],
+  "sesong_topp": [
+   10,
+   11,
+   12,
+   1,
+   2,
+   3
+  ],
+  "for": [
+   "solsikkefrø",
+   "meisebolle",
+   "talg",
+   "småfrø"
+  ],
+  "sjeldenhet": "vanlig",
+  "ungfugl_avvik": "Mattere farger og svakere svart bryststripe.",
+  "kjennetegn": "Gul underside med svart stripe og hvite kinn.",
+  "beskrivelse": "Vanlig og rask fuglebrettgjest som ofte henger opp ned og tar frø med seg.",
+  "illustrasjon": "kjottmeis.png",
+  "skala": 0.3
+ },
+ {
+  "id": "blaameis",
+  "navn": "Blåmeis",
+  "storrelse": "mindre_enn_spurv",
+  "atferd": [
+   "henger_opp_ned",
+   "flokk",
+   "tar_fro_og_flyr_vekk"
+  ],
+  "bryst": "gult_uten_stripe",
+  "hode": "blaa_hvit_svart",
+  "nebb": "tykt_kjegleformet",
+  "sted": [
+   "mateplass",
+   "trekrone",
+   "trestamme"
+  ],
+  "sesong": [
+   1,
+   2,
+   3,
+   4,
+   5,
+   6,
+   7,
+   8,
+   9,
+   10,
+   11,
+   12
+  ],
+  "sesong_topp": [
+   10,
+   11,
+   12,
+   1,
+   2,
+   3
+  ],
+  "for": [
+   "solsikkefrø",
+   "meisebolle",
+   "talg",
+   "småfrø"
+  ],
+  "sjeldenhet": "vanlig",
+  "ungfugl_avvik": "Mattere blått hode og mindre tydelig gul underside.",
+  "kjennetegn": "Blå isse, hvite kinn og gul underside uten bryststripe.",
+  "beskrivelse": "Liten, aktiv og svært vanlig ved fuglebrett, ofte i raske turer inn og ut.",
+  "illustrasjon": "blaameis.png",
+  "skala": 0.24
+ },
+ {
+  "id": "granmeis",
+  "navn": "Granmeis",
+  "storrelse": "mindre_enn_spurv",
+  "atferd": [
+   "flokk",
+   "henger_opp_ned",
+   "tar_fro_og_flyr_vekk"
+  ],
+  "bryst": "beige_brunt",
+  "hode": "svart_hette",
+  "nebb": "tynt_spisst",
+  "sted": [
+   "mateplass",
+   "trekrone",
+   "trestamme"
+  ],
+  "sesong": [
+   1,
+   2,
+   3,
+   4,
+   5,
+   6,
+   7,
+   8,
+   9,
+   10,
+   11,
+   12
+  ],
+  "sesong_topp": [
+   9,
+   10,
+   11,
+   12,
+   1,
+   2
+  ],
+  "for": [
+   "solsikkefrø",
+   "frøblanding",
+   "talg"
+  ],
+  "sjeldenhet": "vanlig",
+  "ungfugl_avvik": "Mattere drakt og mindre tydelig svart hette.",
+  "kjennetegn": "Liten, gråbrun meis med svart hette.",
+  "beskrivelse": "Barskogsmeis som kan komme til brettet, ofte i små flokker og i vinterhalvåret.",
+  "illustrasjon": "granmeis.png",
+  "skala": 0.27
+ },
+ {
+  "id": "svartmeis",
+  "navn": "Svartmeis",
+  "storrelse": "mindre_enn_spurv",
+  "atferd": [
+   "flokk",
+   "henger_opp_ned",
+   "tar_fro_og_flyr_vekk"
+  ],
+  "bryst": "beige_brunt",
+  "hode": "hvit_nakkeflekk",
+  "nebb": "tynt_spisst",
+  "sted": [
+   "mateplass",
+   "trekrone",
+   "trestamme"
+  ],
+  "sesong": [
+   1,
+   2,
+   3,
+   4,
+   5,
+   6,
+   7,
+   8,
+   9,
+   10,
+   11,
+   12
+  ],
+  "sesong_topp": [
+   9,
+   10,
+   11,
+   12,
+   1,
+   2
+  ],
+  "for": [
+   "solsikkefrø",
+   "nøtter",
+   "talg"
+  ],
+  "sjeldenhet": "vanlig",
+  "ungfugl_avvik": "Mattere farger og mindre tydelig hvit nakkeflekk.",
+  "kjennetegn": "Svart hette og tydelig hvit nakkeflekk.",
+  "beskrivelse": "Liten, mørk meis som skilles fra granmeis ved den hvite nakkeflekken.",
+  "illustrasjon": "svartmeis.png",
+  "skala": 0.24
+ },
+ {
+  "id": "toppmeis",
+  "navn": "Toppmeis",
+  "storrelse": "mindre_enn_spurv",
+  "atferd": [
+   "flokk",
+   "henger_opp_ned",
+   "tar_fro_og_flyr_vekk"
+  ],
+  "bryst": "beige_brunt",
+  "hode": "svart_hvit_topp",
+  "nebb": "tynt_spisst",
+  "sted": [
+   "mateplass",
+   "trekrone",
+   "trestamme"
+  ],
+  "sesong": [
+   1,
+   2,
+   3,
+   4,
+   5,
+   6,
+   7,
+   8,
+   9,
+   10,
+   11,
+   12
+  ],
+  "sesong_topp": [
+   9,
+   10,
+   11,
+   12,
+   1,
+   2
+  ],
+  "for": [
+   "solsikkefrø",
+   "frøblanding",
+   "talg"
+  ],
+  "sjeldenhet": "vanlig",
+  "ungfugl_avvik": "Kortere og svakere topp.",
+  "kjennetegn": "Liten meis med tydelig fjærtopp.",
+  "beskrivelse": "Vanlig i barskogsnære hager og kan dukke opp på fuglebrett i nærheten av trær.",
+  "illustrasjon": "toppmeis.png",
+  "skala": 0.24
+ },
+ {
+  "id": "spettmeis",
+  "navn": "Spettmeis",
+  "storrelse": "mindre_enn_spurv",
+  "atferd": [
+   "hodet_ned_nedover_stamme",
+   "alene",
+   "tar_fro_og_flyr_vekk"
+  ],
+  "bryst": "beige_brunt",
+  "hode": "blaa_hvit_svart",
+  "nebb": "tykt_kjegleformet",
+  "sted": [
+   "trestamme",
+   "trekrone",
+   "mateplass"
+  ],
+  "sesong": [
+   1,
+   2,
+   3,
+   4,
+   5,
+   6,
+   7,
+   8,
+   9,
+   10,
+   11,
+   12
+  ],
+  "sesong_topp": [
+   9,
+   10,
+   11,
+   12,
+   1,
+   2
+  ],
+  "for": [
+   "solsikkefrø",
+   "nøtter",
+   "talg"
+  ],
+  "sjeldenhet": "vanlig",
+  "ungfugl_avvik": "Mattere kontrast og svakere tegninger i hodet.",
+  "kjennetegn": "Klatrer nedover stammen med hodet først.",
+  "beskrivelse": "Den eneste vanlige hagefuglen som går nedover trestammen med hodet først.",
+  "illustrasjon": "spettmeis.png",
+  "skala": 0.3
+ },
+ {
+  "id": "trekryper",
+  "navn": "Trekryper",
+  "storrelse": "mindre_enn_spurv",
+  "atferd": [
+   "spiraler_oppover_stamme",
+   "alene"
+  ],
+  "bryst": "beige_brunt",
+  "hode": "stripet",
+  "nebb": "langt_tynt_boeyd",
+  "sted": [
+   "trestamme",
+   "trekrone"
+  ],
+  "sesong": [
+   1,
+   2,
+   3,
+   4,
+   5,
+   6,
+   7,
+   8,
+   9,
+   10,
+   11,
+   12
+  ],
+  "sesong_topp": [
+   9,
+   10,
+   11,
+   12,
+   1,
+   2
+  ],
+  "for": [
+   "insekter",
+   "edderkopper"
+  ],
+  "sjeldenhet": "uvanlig",
+  "ungfugl_avvik": "Mattere og mindre tydelig tegnet.",
+  "kjennetegn": "Kryper oppover stammer i spiral med krumt nebb.",
+  "beskrivelse": "Skogstilknyttet liten fugl som er lett å kjenne igjen på bevegelsesmønsteret.",
+  "illustrasjon": "trekryper.png",
+  "skala": 0.27
+ },
+ {
+  "id": "stillits",
+  "navn": "Stillits",
+  "storrelse": "mindre_enn_spurv",
+  "atferd": [
+   "flokk",
+   "hopper_pa_bakken"
+  ],
+  "bryst": "beige_brunt",
+  "hode": "hvit_svart_maska",
+  "nebb": "tynt_spisst",
+  "sted": [
+   "mateplass",
+   "bakken",
+   "trekrone"
+  ],
+  "sesong": [
+   1,
+   2,
+   3,
+   4,
+   5,
+   6,
+   7,
+   8,
+   9,
+   10,
+   11,
+   12
+  ],
+  "sesong_topp": [
+   10,
+   11,
+   12,
+   1,
+   2,
+   3
+  ],
+  "for": [
+   "nigerfrø",
+   "solsikkefrø",
+   "tistel"
+  ],
+  "sjeldenhet": "vanlig",
+  "ungfugl_avvik": "Ungfugl mangler rød ansiktsmaske.",
+  "kjennetegn": "Rød maske og gult vingebånd.",
+  "beskrivelse": "Fargerik fink som ofte kommer til frøautomater og tistelfrø.",
+  "illustrasjon": "stillits.png",
+  "skala": 0.28
+ },
+ {
+  "id": "dompap",
+  "navn": "Dompap",
+  "storrelse": "som_spurv",
+  "atferd": [
+   "flokk",
+   "hopper_pa_bakken"
+  ],
+  "bryst": "rosa_rodt",
+  "hode": "svart",
+  "nebb": "tykt_kjegleformet",
+  "sted": [
+   "mateplass",
+   "trekrone",
+   "trestamme"
+  ],
+  "sesong": [
+   1,
+   2,
+   3,
+   4,
+   5,
+   6,
+   7,
+   8,
+   9,
+   10,
+   11,
+   12
+  ],
+  "sesong_topp": [
+   11,
+   12,
+   1,
+   2,
+   3
+  ],
+  "for": [
+   "solsikkefrø",
+   "nøtter",
+   "frøblanding"
+  ],
+  "sjeldenhet": "vanlig",
+  "ungfugl_avvik": "Ungfugl er gråbrun og mangler rødt bryst.",
+  "kjennetegn": "Hann med rosa-rødt bryst og svart hette.",
+  "beskrivelse": "Vanlig vintergjest, spesielt i hager med trær og busker.",
+  "illustrasjon": "dompap.png",
+  "skala": 0.34
+ },
+ {
+  "id": "gronnfink",
+  "navn": "Grønnfink",
+  "storrelse": "som_spurv",
+  "atferd": [
+   "flokk",
+   "hopper_pa_bakken"
+  ],
+  "bryst": "beige_brunt",
+  "hode": "gronn",
+  "nebb": "tykt_kjegleformet",
+  "sted": [
+   "mateplass",
+   "bakken",
+   "trekrone"
+  ],
+  "sesong": [
+   1,
+   2,
+   3,
+   4,
+   5,
+   6,
+   7,
+   8,
+   9,
+   10,
+   11,
+   12
+  ],
+  "sesong_topp": [
+   10,
+   11,
+   12,
+   1,
+   2,
+   3
+  ],
+  "for": [
+   "solsikkefrø",
+   "frøblanding",
+   "hampefrø"
+  ],
+  "sjeldenhet": "vanlig",
+  "ungfugl_avvik": "Ungfugl er mer gråbrun og mindre grønn.",
+  "kjennetegn": "Grønn fugl med kraftig nebb og gule vingefelt.",
+  "beskrivelse": "En vanlig og litt robust fink som ofte samler seg ved matplasser.",
+  "illustrasjon": "gronnfink.png",
+  "skala": 0.32
+ },
+ {
+  "id": "gronnsisik",
+  "navn": "Grønnsisik",
+  "storrelse": "mindre_enn_spurv",
+  "atferd": [
+   "flokk",
+   "hopper_pa_bakken"
+  ],
+  "bryst": "beige_brunt",
+  "hode": "stripet",
+  "nebb": "tykt_kjegleformet",
+  "sted": [
+   "mateplass",
+   "trekrone",
+   "bakken"
+  ],
+  "sesong": [
+   1,
+   2,
+   3,
+   4,
+   5,
+   6,
+   7,
+   8,
+   9,
+   10,
+   11,
+   12
+  ],
+  "sesong_topp": [
+   10,
+   11,
+   12,
+   1,
+   2,
+   3
+  ],
+  "for": [
+   "orfrø",
+   "solsikkefrø",
+   "frøblanding"
+  ],
+  "sjeldenhet": "vanlig",
+  "ungfugl_avvik": "Ungfugl er mer brungrå og mindre gulgrønn.",
+  "kjennetegn": "Liten grønn-gul fink som ofte kommer i flokker.",
+  "beskrivelse": "Streifende frøspiser som kan opptre i varierende antall ved brett i Oslofjorden.",
+  "illustrasjon": "gronnsisik.png",
+  "skala": 0.26
+ },
+ {
+  "id": "grasisik",
+  "navn": "Gråsisik",
+  "storrelse": "mindre_enn_spurv",
+  "atferd": [
+   "flokk",
+   "hopper_pa_bakken"
+  ],
+  "bryst": "stripet",
+  "hode": "stripet",
+  "nebb": "tykt_kjegleformet",
+  "sted": [
+   "mateplass",
+   "trekrone",
+   "bakken"
+  ],
+  "sesong": [
+   1,
+   2,
+   3,
+   4,
+   5,
+   6,
+   7,
+   8,
+   9,
+   10,
+   11,
+   12
+  ],
+  "sesong_topp": [
+   10,
+   11,
+   12,
+   1,
+   2,
+   3
+  ],
+  "for": [
+   "orfrø",
+   "bjørkefrø",
+   "solsikkefrø"
+  ],
+  "sjeldenhet": "vanlig",
+  "ungfugl_avvik": "Ungfugl er mer brun og mindre rød i tonen.",
+  "kjennetegn": "Liten stripet sisik med rødlig ansikt hos hann.",
+  "beskrivelse": "Vanlig vinterfugl som ofte kommer i flokker til frø og bjørkefrø.",
+  "illustrasjon": "grasisik.png",
+  "skala": 0.28
+ },
+ {
+  "id": "bokfink",
+  "navn": "Bokfink",
+  "storrelse": "som_spurv",
+  "atferd": [
+   "flokk",
+   "hopper_pa_bakken"
+  ],
+  "bryst": "beige_brunt",
+  "hode": "stripet",
+  "nebb": "tykt_kjegleformet",
+  "sted": [
+   "mateplass",
+   "bakken",
+   "trekrone"
+  ],
+  "sesong": [
+   1,
+   2,
+   3,
+   4,
+   5,
+   6,
+   7,
+   8,
+   9,
+   10,
+   11,
+   12
+  ],
+  "sesong_topp": [
+   3,
+   4,
+   5,
+   9,
+   10,
+   11
+  ],
+  "for": [
+   "solsikkefrø",
+   "frøblanding",
+   "korn"
+  ],
+  "sjeldenhet": "vanlig",
+  "ungfugl_avvik": "Ungfugl er mer brun og mindre kontrastfylt.",
+  "kjennetegn": "Vanlig fink med tydelige vingebånd.",
+  "beskrivelse": "Kommer gjerne til bakken under brettet for å plukke opp frø.",
+  "illustrasjon": "bokfink.png",
+  "skala": 0.32
+ },
+ {
+  "id": "bjorkefink",
+  "navn": "Bjørkefink",
+  "storrelse": "som_spurv",
+  "atferd": [
+   "flokk",
+   "hopper_pa_bakken"
+  ],
+  "bryst": "beige_brunt",
+  "hode": "stripet",
+  "nebb": "tykt_kjegleformet",
+  "sted": [
+   "mateplass",
+   "bakken",
+   "trekrone"
+  ],
+  "sesong": [
+   1,
+   2,
+   3,
+   4,
+   5,
+   6,
+   7,
+   8,
+   9,
+   10,
+   11,
+   12
+  ],
+  "sesong_topp": [
+   10,
+   11,
+   12,
+   1,
+   2,
+   3
+  ],
+  "for": [
+   "bjørkefrø",
+   "solsikkefrø",
+   "frøblanding"
+  ],
+  "sjeldenhet": "uvanlig",
+  "ungfugl_avvik": "Ungfugl har mer diffuse tegninger.",
+  "kjennetegn": "Mørk vinterfink med kontrastfulle lyse partier.",
+  "beskrivelse": "Uregelmessig gjest i flokker når det er mye frø i lufta og på bakken.",
+  "illustrasjon": "bjorkefink.png",
+  "skala": 0.32
+ },
+ {
+  "id": "gulspurv",
+  "navn": "Gulspurv",
+  "storrelse": "som_spurv",
+  "atferd": [
+   "flokk",
+   "hopper_pa_bakken"
+  ],
+  "bryst": "gult_uten_stripe",
+  "hode": "gul_brun",
+  "nebb": "tykt_kjegleformet",
+  "sted": [
+   "mateplass",
+   "bakken",
+   "gjerde"
+  ],
+  "sesong": [
+   1,
+   2,
+   3,
+   4,
+   5,
+   6,
+   7,
+   8,
+   9,
+   10,
+   11,
+   12
+  ],
+  "sesong_topp": [
+   10,
+   11,
+   12,
+   1,
+   2,
+   3
+  ],
+  "for": [
+   "havre",
+   "frøblanding",
+   "korn"
+  ],
+  "sjeldenhet": "vanlig",
+  "ungfugl_avvik": "Ungfugl er mer stripet og mindre gul.",
+  "kjennetegn": "Gul underside og stripet hode.",
+  "beskrivelse": "Vanlig i åpne områder og hager, ofte på bakken eller ved gjerder.",
+  "illustrasjon": "gulspurv.png",
+  "skala": 0.35
+ },
+ {
+  "id": "graspurv",
+  "navn": "Gråspurv",
+  "storrelse": "som_spurv",
+  "atferd": [
+   "flokk",
+   "hopper_pa_bakken"
+  ],
+  "bryst": "beige_brunt",
+  "hode": "graa_brun",
+  "nebb": "tykt_kjegleformet",
+  "sted": [
+   "mateplass",
+   "bakken",
+   "gjerde"
+  ],
+  "sesong": [
+   1,
+   2,
+   3,
+   4,
+   5,
+   6,
+   7,
+   8,
+   9,
+   10,
+   11,
+   12
+  ],
+  "sesong_topp": [
+   1,
+   2,
+   3,
+   10,
+   11,
+   12
+  ],
+  "for": [
+   "frøblanding",
+   "korn",
+   "smuler"
+  ],
+  "sjeldenhet": "vanlig",
+  "ungfugl_avvik": "Ungfugl er ensfarget brungrå.",
+  "kjennetegn": "Vanlig spurv i tettbygde strøk.",
+  "beskrivelse": "Typisk hage- og byfugl som ofte samler seg ved matrester og frø.",
+  "illustrasjon": "graspurv.png",
+  "skala": 0.32
+ },
+ {
+  "id": "pilfink",
+  "navn": "Pilfink",
+  "storrelse": "som_spurv",
+  "atferd": [
+   "flokk",
+   "hopper_pa_bakken"
+  ],
+  "bryst": "beige_brunt",
+  "hode": "kastanje_svart_hvit",
+  "nebb": "tykt_kjegleformet",
+  "sted": [
+   "mateplass",
+   "bakken",
+   "gjerde"
+  ],
+  "sesong": [
+   1,
+   2,
+   3,
+   4,
+   5,
+   6,
+   7,
+   8,
+   9,
+   10,
+   11,
+   12
+  ],
+  "sesong_topp": [
+   10,
+   11,
+   12,
+   1,
+   2,
+   3
+  ],
+  "for": [
+   "frøblanding",
+   "solsikkefrø",
+   "korn"
+  ],
+  "sjeldenhet": "vanlig",
+  "ungfugl_avvik": "Ungfugl mangler tydelig kastanjefarget isse.",
+  "kjennetegn": "Liten brun spurv med svart kinnflekk.",
+  "beskrivelse": "Vanlig ved brett og i hager, ofte i små flokker.",
+  "illustrasjon": "pilfink.png",
+  "skala": 0.3
+ },
+ {
+  "id": "rodstrupe",
+  "navn": "Rødstrupe",
+  "storrelse": "mindre_enn_spurv",
+  "atferd": [
+   "alene",
+   "hopper_pa_bakken"
+  ],
+  "bryst": "oransje_strupe",
+  "hode": "beige_brunt",
+  "nebb": "tynt_spisst",
+  "sted": [
+   "bakken",
+   "trekrone",
+   "gjerde"
+  ],
+  "sesong": [
+   1,
+   2,
+   3,
+   4,
+   5,
+   6,
+   7,
+   8,
+   9,
+   10,
+   11,
+   12
+  ],
+  "sesong_topp": [
+   10,
+   11,
+   12,
+   1,
+   2,
+   3
+  ],
+  "for": [
+   "insekter",
+   "meitemark",
+   "bær"
+  ],
+  "sjeldenhet": "vanlig",
+  "ungfugl_avvik": "Ungfugl har flekket bryst og mangler tydelig oransje strupe.",
+  "kjennetegn": "Oransje strupe og bryst.",
+  "beskrivelse": "Vanlig i hager og skogkanter, ofte på bakken der den søker mark og smådyr.",
+  "illustrasjon": "rodstrupe.png",
+  "skala": 0.3
+ },
+ {
+  "id": "gjerdesmett",
+  "navn": "Gjerdesmett",
+  "storrelse": "mindre_enn_spurv",
+  "atferd": [
+   "alene",
+   "hopper_pa_bakken"
+  ],
+  "bryst": "beige_brunt",
+  "hode": "stripet",
+  "nebb": "tynt_spisst",
+  "sted": [
+   "bakken",
+   "gjerde",
+   "trekrone"
+  ],
+  "sesong": [
+   1,
+   2,
+   3,
+   4,
+   5,
+   6,
+   7,
+   8,
+   9,
+   10,
+   11,
+   12
+  ],
+  "sesong_topp": [
+   10,
+   11,
+   12,
+   1,
+   2,
+   3
+  ],
+  "for": [
+   "insekter",
+   "edderkopper",
+   "larver"
+  ],
+  "sjeldenhet": "vanlig",
+  "ungfugl_avvik": "Ungfugl er noe mattere i fargen.",
+  "kjennetegn": "Veldig liten fugl med oppreist stjert og fin striping.",
+  "beskrivelse": "Sky og hurtig liten fugl som ofte holder seg lavt i vegetasjonen.",
+  "illustrasjon": "gjerdesmett.png",
+  "skala": 0.2
+ },
+ {
+  "id": "svarttrost",
+  "navn": "Svarttrost",
+  "storrelse": "som_svarttrost",
+  "atferd": [
+   "alene",
+   "hopper_pa_bakken"
+  ],
+  "bryst": "svart",
+  "hode": "svart",
+  "nebb": "tynt_spisst",
+  "sted": [
+   "bakken",
+   "trekrone",
+   "gjerde"
+  ],
+  "sesong": [
+   1,
+   2,
+   3,
+   4,
+   5,
+   6,
+   7,
+   8,
+   9,
+   10,
+   11,
+   12
+  ],
+  "sesong_topp": [
+   10,
+   11,
+   12,
+   1,
+   2,
+   3
+  ],
+  "for": [
+   "bær",
+   "epler",
+   "meitemark"
+  ],
+  "sjeldenhet": "vanlig",
+  "ungfugl_avvik": "Ungfugl er brunflekket og uten helsvart drakt.",
+  "kjennetegn": "Hann helsvart med oransjegult nebb.",
+  "beskrivelse": "Vanlig hagefugl som ofte søker mat på bakken og i busker.",
+  "illustrasjon": "svarttrost.png",
+  "skala": 0.53
+ },
+ {
+  "id": "gratrost",
+  "navn": "Gråtrost",
+  "storrelse": "som_svarttrost",
+  "atferd": [
+   "flokk",
+   "hopper_pa_bakken"
+  ],
+  "bryst": "flekkete",
+  "hode": "graa",
+  "nebb": "tynt_spisst",
+  "sted": [
+   "bakken",
+   "trekrone",
+   "gjerde"
+  ],
+  "sesong": [
+   1,
+   2,
+   3,
+   4,
+   5,
+   6,
+   7,
+   8,
+   9,
+   10,
+   11,
+   12
+  ],
+  "sesong_topp": [
+   10,
+   11,
+   12,
+   1,
+   2,
+   3
+  ],
+  "for": [
+   "bær",
+   "epler",
+   "meitemark"
+  ],
+  "sjeldenhet": "vanlig",
+  "ungfugl_avvik": "Ungfugl er mer skjellmønstret og mindre grå i hodet.",
+  "kjennetegn": "Grått hode og flekkete bryst.",
+  "beskrivelse": "Vanlig i kalde perioder og ofte i flokker på bakken eller i frukttrær.",
+  "illustrasjon": "gratrost.png",
+  "skala": 0.54
+ },
+ {
+  "id": "staer",
+  "navn": "Stær",
+  "storrelse": "mellom",
+  "atferd": [
+   "gar_pa_bakken",
+   "flokk"
+  ],
+  "bryst": "flekkete",
+  "hode": "mork_metallisk",
+  "nebb": "tynt_spisst",
+  "sted": [
+   "bakken",
+   "trekrone",
+   "mateplass"
+  ],
+  "sesong": [
+   1,
+   2,
+   3,
+   4,
+   5,
+   6,
+   7,
+   8,
+   9,
+   10,
+   11,
+   12
+  ],
+  "sesong_topp": [
+   3,
+   4,
+   5,
+   6,
+   7,
+   8
+  ],
+  "for": [
+   "insekter",
+   "mark",
+   "frø",
+   "smuler"
+  ],
+  "sjeldenhet": "vanlig",
+  "ungfugl_avvik": "Ungfugl er mer ensfarget gråbrun.",
+  "kjennetegn": "Går ofte rolig på bakken og har lys prikkete drakt.",
+  "beskrivelse": "Svært sosial fugl som bruker bakken aktivt og ofte kommer i flokk.",
+  "illustrasjon": "staer.png",
+  "skala": 0.46
+ },
+ {
+  "id": "flaggspett",
+  "navn": "Flaggspett",
+  "storrelse": "som_svarttrost",
+  "atferd": [
+   "hakker_pa_stamme",
+   "alene"
+  ],
+  "bryst": "hvitt",
+  "hode": "svart_hvit_rod",
+  "nebb": "meiselformet",
+  "sted": [
+   "trestamme",
+   "trekrone",
+   "mateplass"
+  ],
+  "sesong": [
+   1,
+   2,
+   3,
+   4,
+   5,
+   6,
+   7,
+   8,
+   9,
+   10,
+   11,
+   12
+  ],
+  "sesong_topp": [
+   9,
+   10,
+   11,
+   12,
+   1,
+   2
+  ],
+  "for": [
+   "talg",
+   "solsikkefrø",
+   "nøtter",
+   "insekter"
+  ],
+  "sjeldenhet": "vanlig",
+  "ungfugl_avvik": "Ungfugl har rød isse i stedet for rød nakkeflekk hos hann.",
+  "kjennetegn": "Svart-hvit spett med rød undergump.",
+  "beskrivelse": "Vanlig spett som hakker på stammer og kan komme til talg og nøtter.",
+  "illustrasjon": "flaggspett.png",
+  "skala": 0.49
+ },
+ {
+  "id": "notteskrike",
+  "navn": "Nøtteskrike",
+  "storrelse": "som_svarttrost",
+  "atferd": [
+   "flokk",
+   "alene"
+  ],
+  "bryst": "beige_brunt",
+  "hode": "stripet",
+  "nebb": "kraftig_stort",
+  "sted": [
+   "trekrone",
+   "bakken",
+   "mateplass"
+  ],
+  "sesong": [
+   1,
+   2,
+   3,
+   4,
+   5,
+   6,
+   7,
+   8,
+   9,
+   10,
+   11,
+   12
+  ],
+  "sesong_topp": [
+   9,
+   10,
+   11,
+   12,
+   1,
+   2
+  ],
+  "for": [
+   "hasselnøtter",
+   "solsikkefrø",
+   "nøtter"
+  ],
+  "sjeldenhet": "uvanlig",
+  "ungfugl_avvik": "Mattere blå vingefelt og svakere tegninger.",
+  "kjennetegn": "Blå vingepaneler og kraftig varsling.",
+  "beskrivelse": "Sky og stor kråkefugl som kan komme innom og ta nøtter eller frø.",
+  "illustrasjon": "notteskrike.png",
+  "skala": 0.72
+ },
+ {
+  "id": "skjaere",
+  "navn": "Skjære",
+  "storrelse": "storre",
+  "atferd": [
+   "flokk",
+   "alene"
+  ],
+  "bryst": "hvitt",
+  "hode": "svart",
+  "nebb": "kraftig_stort",
+  "sted": [
+   "bakken",
+   "trekrone",
+   "mateplass"
+  ],
+  "sesong": [
+   1,
+   2,
+   3,
+   4,
+   5,
+   6,
+   7,
+   8,
+   9,
+   10,
+   11,
+   12
+  ],
+  "sesong_topp": [
+   1,
+   2,
+   3,
+   10,
+   11,
+   12
+  ],
+  "for": [
+   "frø",
+   "smuler",
+   "matrester"
+  ],
+  "sjeldenhet": "vanlig",
+  "ungfugl_avvik": "Ungfugl har kortere stjert og mattere farger.",
+  "kjennetegn": "Svarthvit kråkefugl med lang stjert.",
+  "beskrivelse": "Vanlig og tilpasningsdyktig, ofte på bakken eller ved åpne matplasser.",
+  "illustrasjon": "skjaere.png",
+  "skala": 0.96
+ },
+ {
+  "id": "krake",
+  "navn": "Kråke",
+  "storrelse": "storre",
+  "atferd": [
+   "flokk",
+   "alene"
+  ],
+  "bryst": "svart",
+  "hode": "svart",
+  "nebb": "kraftig_stort",
+  "sted": [
+   "bakken",
+   "trekrone",
+   "mateplass"
+  ],
+  "sesong": [
+   1,
+   2,
+   3,
+   4,
+   5,
+   6,
+   7,
+   8,
+   9,
+   10,
+   11,
+   12
+  ],
+  "sesong_topp": [
+   1,
+   2,
+   3,
+   10,
+   11,
+   12
+  ],
+  "for": [
+   "matrester",
+   "frø",
+   "smuler"
+  ],
+  "sjeldenhet": "vanlig",
+  "ungfugl_avvik": "Ungfugl er brunere og mattere i fjærdrakten.",
+  "kjennetegn": "Stor svart kråkefugl med kraftig nebb.",
+  "beskrivelse": "Områdevanlig fugl som av og til dukker opp ved åpne matplasser og på bakken.",
+  "illustrasjon": "krake.png",
+  "skala": 1.0
+ },
+ {
+  "id": "ringdue",
+  "navn": "Ringdue",
+  "storrelse": "storre",
+  "atferd": [
+   "alene",
+   "gar_pa_bakken"
+  ],
+  "bryst": "beige_brunt",
+  "hode": "graa",
+  "nebb": "tykt_kjegleformet",
+  "sted": [
+   "bakken",
+   "trekrone",
+   "mateplass"
+  ],
+  "sesong": [
+   1,
+   2,
+   3,
+   4,
+   5,
+   6,
+   7,
+   8,
+   9,
+   10,
+   11,
+   12
+  ],
+  "sesong_topp": [
+   9,
+   10,
+   11,
+   12,
+   1,
+   2
+  ],
+  "for": [
+   "korn",
+   "frø",
+   "epler"
+  ],
+  "sjeldenhet": "vanlig",
+  "ungfugl_avvik": "Ungfugl mangler tydelig hvit halsflekk.",
+  "kjennetegn": "Stor due med hvit halsflekk.",
+  "beskrivelse": "Vanlig i hager og parker, ofte på bakken der den plukker opp sølt frø.",
+  "illustrasjon": "ringdue.png",
+  "skala": 0.87
+ },
+ {
+  "id": "kjernebiter",
+  "navn": "Kjernebiter",
+  "storrelse": "som_spurv",
+  "atferd": [
+   "alene",
+   "flokk"
+  ],
+  "bryst": "beige_brunt",
+  "hode": "brun_svart",
+  "nebb": "kraftig_stort",
+  "sted": [
+   "trekrone",
+   "mateplass",
+   "bakken"
+  ],
+  "sesong": [
+   1,
+   2,
+   3,
+   4,
+   5,
+   6,
+   7,
+   8,
+   9,
+   10,
+   11,
+   12
+  ],
+  "sesong_topp": [
+   10,
+   11,
+   12,
+   1,
+   2,
+   3
+  ],
+  "for": [
+   "kirsebærstein",
+   "solsikkefrø",
+   "nøtter"
+  ],
+  "sjeldenhet": "uvanlig",
+  "ungfugl_avvik": "Ungfugl har mattere farger og mindre tydelig ansiktstegning.",
+  "kjennetegn": "Svært kraftig nebb og kompakt kropp.",
+  "beskrivelse": "En av de kraftigste småfuglene, sjelden men mulig ved frø- og nøtteplasser.",
+  "illustrasjon": "kjernebiter.png",
+  "skala": 0.38
+ },
+ {
+  "id": "sidensvans",
+  "navn": "Sidensvans",
+  "storrelse": "mellom",
+  "atferd": [
+   "flokk",
+   "alene"
+  ],
+  "bryst": "beige_brunt",
+  "hode": "mork_maske",
+  "nebb": "tykt_kjegleformet",
+  "sted": [
+   "trekrone",
+   "mateplass",
+   "i_lufta"
+  ],
+  "sesong": [
+   1,
+   2,
+   3,
+   4,
+   5,
+   6,
+   7,
+   8,
+   9,
+   10,
+   11,
+   12
+  ],
+  "sesong_topp": [
+   9,
+   10,
+   11,
+   12,
+   1,
+   2
+  ],
+  "for": [
+   "bær",
+   "epler",
+   "frukt"
+  ],
+  "sjeldenhet": "uvanlig",
+  "ungfugl_avvik": "Ungfugl har svakere maska og mindre tydelige farger.",
+  "kjennetegn": "Silkemyk fugl med topp og svart ansiktsmaske.",
+  "beskrivelse": "Kommer ofte i flokker når det er bærår og kan besøke hager med frukt.",
+  "illustrasjon": "sidensvans.png",
+  "skala": 0.43
+ },
+ {
+  "id": "spurvehauk",
+  "navn": "Spurvehauk",
+  "storrelse": "som_svarttrost",
+  "atferd": [
+   "alene",
+   "i_lufta"
+  ],
+  "bryst": "stripet",
+  "hode": "graa",
+  "nebb": "kraftig_stort",
+  "sted": [
+   "i_lufta",
+   "trekrone",
+   "bakken"
+  ],
+  "sesong": [
+   1,
+   2,
+   3,
+   4,
+   5,
+   6,
+   7,
+   8,
+   9,
+   10,
+   11,
+   12
+  ],
+  "sesong_topp": [
+   10,
+   11,
+   12,
+   1,
+   2,
+   3
+  ],
+  "for": [
+   "småfugler"
+  ],
+  "sjeldenhet": "uvanlig",
+  "ungfugl_avvik": "Ungfugl er mer brun og kraftig tverrstripet.",
+  "kjennetegn": "Liten rovfugl med korte brede vinger og lang stjert.",
+  "beskrivelse": "Sporadisk gjest ved fuglebrettet, gjerne som hurtig jeger etter småfugler.",
+  "illustrasjon": "spurvehauk.png",
+  "skala": 0.7
+ }
+]
+</script>
+
+<script>
+"use strict";
+
+/* ============================================================
+   0. STED
+   Én linje. Bytt koordinatene her hvis vinduet står et annet sted.
+   ============================================================ */
+/* Koordinatene er avrundet til fire desimaler med vilje: det holder på
+   rundt elleve meter, som er mer enn nok til vær og sol, og det legger
+   ingen nøyaktig hjemmeadresse inn i en URL. */
+const HOME = { navn: "Tjøme", lat: 59.1100, lon: 10.4000, tz: "Europe/Oslo" };
+
+/* ============================================================
+   1. ARTSDATA
+   Speiler arter.json i repoet. Rediger arter.json og kjør
+   tools/embed-arter.py for å oppdatere blokken under.
+   ============================================================ */
+const ARTER = JSON.parse(document.getElementById("arter-data").textContent);
+
+/* ============================================================
+   2. BILDEMÅL
+   Målt fra selve PNG-ene, ikke gjettet.
+   bbox = [x, y, bredde, høyde] som andel av ruten.
+   span = kroppens lengde langs hovedaksen, som andel av rutebredden.
+   anker = hvor på fuglen den skal festes, som andel av bbox.
+   ============================================================ */
+const BBOX = {
+  bjorkefink:[0.0586,0.1367,0.8418,0.7344], blaameis:[0.0742,0.1016,0.8809,0.8105],
+  bokfink:[0.1562,0.166,0.6191,0.668],      dompap:[0.0527,0.1641,0.8027,0.6445],
+  flaggspett:[0.3164,0.1211,0.3438,0.8066], gjerdesmett:[0.1504,0.2227,0.7168,0.6406],
+  granmeis:[0.168,0.1484,0.75,0.7109],      grasisik:[0.0918,0.1602,0.7285,0.6562],
+  graspurv:[0.0762,0.1309,0.8125,0.75],     gratrost:[0.1426,0.1543,0.8008,0.6758],
+  gronnfink:[0.0957,0.1328,0.7383,0.7285],  gronnsisik:[0.0957,0.1992,0.7695,0.5801],
+  gulspurv:[0.0977,0.1641,0.7168,0.6875],   kjernebiter:[0.084,0.1289,0.8125,0.7246],
+  kjottmeis:[0.3086,0.0742,0.3809,0.8496],  krake:[0.0664,0.1484,0.834,0.6816],
+  notteskrike:[0.0586,0.1426,0.8613,0.6855],pilfink:[0.1055,0.1426,0.8652,0.7383],
+  ringdue:[0.1914,0.1387,0.7305,0.6855],    rodstrupe:[0.0977,0.1289,0.748,0.752],
+  sidensvans:[0.1016,0.123,0.7715,0.7695],  skjaere:[0.0859,0.123,0.7793,0.7949],
+  spettmeis:[0.2617,0.0879,0.4336,0.8027],  spurvehauk:[0.1152,0.1211,0.7793,0.7305],
+  staer:[0.082,0.1035,0.8477,0.7969],       stillits:[0.0801,0.1621,0.7832,0.6387],
+  svartmeis:[0.041,0.1133,0.8574,0.7793],   svarttrost:[0.0508,0.1348,0.8477,0.748],
+  toppmeis:[0.2207,0.0996,0.7168,0.7695],   trekryper:[0.3379,0.0938,0.3086,0.834]
+};
+const SPAN = {
+  bjorkefink:0.9743, blaameis:0.9619, bokfink:0.8311, dompap:0.9621, flaggspett:0.8032,
+  gjerdesmett:0.6776, granmeis:0.9375, grasisik:0.9009, graspurv:1.0077, gratrost:0.9872,
+  gronnfink:0.9548, gronnsisik:0.8261, gulspurv:0.9129, kjernebiter:0.9703, kjottmeis:0.9002,
+  krake:0.9636, notteskrike:1.0252, pilfink:0.9997, ringdue:0.9449, rodstrupe:0.9614,
+  sidensvans:0.9987, skjaere:1.0459, spettmeis:0.8427, spurvehauk:1.0101, staer:0.9905,
+  stillits:0.8875, svartmeis:0.9772, svarttrost:1.0189, toppmeis:0.8817, trekryper:0.8301
+};
+
+/* Hovedaksen måler kroppslengde for 29 av 30. Spurvehauken er tegnet
+   med utslåtte vinger, så aksen måler vingespennet (rundt 62 cm) og
+   ikke kroppen (33 cm). Derfor denne ene overstyringen. */
+const SPAN_CM = { spurvehauk: 62 };
+
+/* Der fuglen "tar tak", som andel av sin egen bbox.
+   Standard er føttene nederst i midten. */
+const ANKER = {
+  kjottmeis:  [0.345, 0.195],   /* henger opp ned, føttene øverst */
+  spettmeis:  [0.134, 0.414],   /* hodet ned, klørne mot stammen til venstre */
+  trekryper:  [0.104, 0.391],
+  flaggspett: [0.069, 0.371],
+  spurvehauk: [0.500, 0.500]    /* i lufta, festes i midten */
+};
+
+/* ============================================================
+   3. PLASSERING I SCENEN
+   PRD §6.1 lag 7. Hver art får en navngitt plass og en luke i den.
+   Lukene er faktiske punkter i tegningen (en grentupp, en pinne på
+   brettet, en stolpe i gjerdet), samlet opp mens scenen bygges, så
+   ingen fugl kan ende opp svevende i løse lufta.
+   speil: true snur fuglen med scaleX(-1). Ingen art her har
+   asymmetrisk fjærdrakt, så speiling er tapsfri.
+   ============================================================ */
+const REF_PX = 190;   /* kråka, 47 cm, tegnes 190 px lang */
+
+const SCENE = {
+  /* brettet: pinnen under, kanten, og taket */
+  kjottmeis:   { plass: "mateplass", luke: 2, speil: false },
+  blaameis:    { plass: "mateplass", luke: 3, speil: true  },
+  granmeis:    { plass: "mateplass", luke: 1, speil: false },
+  svartmeis:   { plass: "mateplass", luke: 4, speil: true  },
+  toppmeis:    { plass: "mateplass", luke: 0, speil: false },
+  gronnfink:   { plass: "mateplass", luke: 5, speil: true  },
+  pilfink:     { plass: "mateplass", luke: 6, speil: false },
+  kjernebiter: { plass: "mateplass", luke: 7, speil: true  },
+
+  /* bjørkestammen. Klatrerne sitter til høyre for stammen, fordi
+     klørne peker mot venstre i alle fire bildene. */
+  flaggspett:  { plass: "trestamme", luke: 0, speil: false },
+  spettmeis:   { plass: "trestamme", luke: 1, speil: false },
+  trekryper:   { plass: "trestamme", luke: 2, speil: false },
+
+  /* bjørkekrona, grana og furua */
+  dompap:      { plass: "trekrone", luke: 0, speil: true  },
+  grasisik:    { plass: "trekrone", luke: 1, speil: false },
+  bjorkefink:  { plass: "trekrone", luke: 2, speil: true  },
+  bokfink:     { plass: "trekrone", luke: 3, speil: true  },
+  notteskrike: { plass: "gran",     luke: 0, speil: false },
+  gronnsisik:  { plass: "furu",     luke: 0, speil: true  },
+
+  /* rogna. Sidensvansen er hovedmålet i PRD §6.4 og får den beste greina. */
+  sidensvans:  { plass: "rogn", luke: 0, speil: true  },
+  gratrost:    { plass: "rogn", luke: 1, speil: false },
+
+  /* gjerdet */
+  gulspurv:    { plass: "gjerde", luke: 0, speil: false },
+  graspurv:    { plass: "gjerde", luke: 1, speil: true  },
+  gjerdesmett: { plass: "gjerde", luke: 2, speil: false },
+
+  /* bakken */
+  rodstrupe:   { plass: "bakken", luke: 0, speil: false },
+  svarttrost:  { plass: "bakken", luke: 1, speil: true  },
+  staer:       { plass: "bakken", luke: 2, speil: true  },
+  ringdue:     { plass: "bakken", luke: 3, speil: false },
+  skjaere:     { plass: "bakken", luke: 4, speil: true  },
+  krake:       { plass: "bakken", luke: 5, speil: false },
+
+  /* tistelbedet. Stillitsens plass, og den eneste som står der. */
+  stillits:    { plass: "tistel", luke: 0, speil: false },
+
+  /* i lufta */
+  spurvehauk:  { plass: "i_lufta", luke: 0, speil: true }
+};
+
+/* Brukt av teksten som forteller hvor i scenen fuglen sitter. */
+const PLASS_NAVN = {
+  mateplass: "på brettet", trestamme: "på bjørkestammen", trekrone: "i bjørka",
+  gran: "i grana", furu: "i furua", gjerde: "på gjerdet", bakken: "på bakken",
+  tistel: "i tistelbedet", rogn: "i rogna", i_lufta: "over hagen"
+};
+
+/* Fylles av byggScene(). plass -> liste med {x, y}. */
+const LUKER = {};
+
+/* ============================================================
+   4. SOLPOSISJON
+   Lokal beregning, ingen nettverkskall. NOAAs lavpresisjonsformler,
+   nøyaktige til rundt en hundredels grad, som er langt mer enn nok
+   for å farge en himmel.
+   ============================================================ */
+const RAD = Math.PI / 180;
+
+function solar(date, lat, lon) {
+  const jd = date.getTime() / 86400000 + 2440587.5;
+  const n = jd - 2451545.0;
+  const L = ((280.460 + 0.9856474 * n) % 360 + 360) % 360;
+  const g = (((357.528 + 0.9856003 * n) % 360 + 360) % 360) * RAD;
+  const lam = (L + 1.915 * Math.sin(g) + 0.020 * Math.sin(2 * g)) * RAD;
+  const eps = (23.439 - 0.0000004 * n) * RAD;
+  const dec = Math.asin(Math.sin(eps) * Math.sin(lam));
+  const ra  = Math.atan2(Math.cos(eps) * Math.sin(lam), Math.cos(lam));
+  const gmst = ((18.697374558 + 24.06570982441908 * n) % 24 + 24) % 24;
+  const lst = (gmst * 15 + lon) * RAD;
+  const ha = lst - ra;
+  const slat = Math.sin(lat * RAD), clat = Math.cos(lat * RAD);
+  const elev = Math.asin(slat * Math.sin(dec) + clat * Math.cos(dec) * Math.cos(ha));
+  const az = Math.atan2(-Math.sin(ha), Math.tan(dec) * clat - slat * Math.cos(ha));
+  return { hoyde: elev / RAD, asimut: ((az / RAD) % 360 + 360) % 360 };
+}
+
+/* Soloppgang og solnedgang ved å lete opp krysningen av -0.833 grader,
+   som er standard horisont med refraksjon. Enkelt og robust, og gir
+   riktig svar også de dagene sola aldri kommer over horisonten. */
+function solPasseringer(date, lat, lon) {
+  const d0 = new Date(date.getFullYear(), date.getMonth(), date.getDate());
+  let opp = null, ned = null, forrige = null;
+  for (let m = 0; m <= 1440; m += 4) {
+    const t = new Date(d0.getTime() + m * 60000);
+    const h = solar(t, lat, lon).hoyde;
+    if (forrige !== null) {
+      if (forrige < -0.833 && h >= -0.833 && opp === null) opp = finpuss(d0, m - 4, m, lat, lon, true);
+      if (forrige >= -0.833 && h < -0.833 && ned === null) ned = finpuss(d0, m - 4, m, lat, lon, false);
+    }
+    forrige = h;
+  }
+  return { opp, ned };
+}
+function finpuss(d0, a, b, lat, lon, stigende) {
+  for (let i = 0; i < 12; i++) {
+    const m = (a + b) / 2;
+    const h = solar(new Date(d0.getTime() + m * 60000), lat, lon).hoyde;
+    if ((h >= -0.833) === stigende) b = m; else a = m;
+  }
+  return new Date(d0.getTime() + ((a + b) / 2) * 60000);
+}
+
+/* Himmelpaletten. Nøkkelbilder på gitte solhøyder, lineær overgang
+   mellom dem, så himmelen glir jevnt gjennom skumringen i stedet for
+   å hoppe mellom faser. */
+const HIMMEL = [
+  [-90, ["#0a1120", "#101a2e", "#16243c"]],
+  [-18, ["#0d1830", "#152340", "#1e2f4c"]],
+  [-12, ["#14264a", "#233960", "#3b4c6e"]],
+  [ -6, ["#23406e", "#4a5878", "#8a6f7e"]],
+  [ -2, ["#33558a", "#7b6f95", "#c98a63"]],
+  [  1, ["#4a74a8", "#9a95ac", "#edb27e"]],
+  [  6, ["#6d9bc9", "#a8bcd4", "#e8cfa6"]],
+  [ 15, ["#7fb0da", "#a9cbe6", "#d9e9f5"]],
+  [ 50, ["#6fa6d8", "#9cc4e4", "#d8ebf8"]]
+];
+
+function hex2rgb(h) { return [parseInt(h.slice(1,3),16), parseInt(h.slice(3,5),16), parseInt(h.slice(5,7),16)]; }
+function rgb2hex(c) { return "#" + c.map(v => Math.round(Math.max(0,Math.min(255,v))).toString(16).padStart(2,"0")).join(""); }
+function blandFarge(a, b, t) {
+  const A = hex2rgb(a), B = hex2rgb(b);
+  return rgb2hex([0,1,2].map(i => A[i] + (B[i] - A[i]) * t));
+}
+function himmelFarger(hoyde) {
+  if (hoyde <= HIMMEL[0][0]) return HIMMEL[0][1];
+  for (let i = 1; i < HIMMEL.length; i++) {
+    if (hoyde <= HIMMEL[i][0]) {
+      const [h0, c0] = HIMMEL[i-1], [h1, c1] = HIMMEL[i];
+      const t = (hoyde - h0) / (h1 - h0);
+      return [0,1,2].map(k => blandFarge(c0[k], c1[k], t));
+    }
+  }
+  return HIMMEL[HIMMEL.length-1][1];
+}
+
+/* ============================================================
+   5. ÅRSTID
+   Løvet skifter gradvis over rundt to uker, ikke på et datoskille.
+   ============================================================ */
+function dagIAret(d) {
+  return Math.floor((d - new Date(d.getFullYear(), 0, 0)) / 86400000);
+}
+function rampe(x, a, b) { return Math.max(0, Math.min(1, (x - a) / (b - a))); }
+
+function lovverk(d) {
+  const t = dagIAret(d);
+  /* ut: 1. mai til 1. juni. av: 20. oktober til 5. november */
+  const ut = rampe(t, 121, 152);
+  const av = 1 - rampe(t, 293, 309);
+  const mengde = Math.min(ut, av);
+  /* gulning: 5. september til 10. oktober */
+  const gult = rampe(t, 248, 283);
+  return { mengde, gult };
+}
+function rognbaer(d) {
+  const t = dagIAret(d);
+  /* bærene modnes i august og spises ned utover vinteren */
+  const kommer = rampe(t, 213, 243);
+  const spist = 1 - rampe(t, 350, 425);
+  return Math.min(kommer, Math.max(0, spist));
+}
+
+const MND = ["januar","februar","mars","april","mai","juni",
+             "juli","august","september","oktober","november","desember"];
+
+const SESONGLINJE = [
+  "Januar. Korteste dagene er passert, og brettet er på sitt travleste.",
+  "Februar. Kaldt og lyst lengre. Meisene begynner å synge på milde dager.",
+  "Mars. Lyset kommer tilbake, og de første trekkfuglene med det.",
+  "April. Hagen våkner. Færre ved brettet, mer i trærne.",
+  "Mai. Bjørka springer ut, og de fleste har annet å gjøre enn å spise frø.",
+  "Juni. Hekketid. Det er stille ved brettet og travelt i buskene.",
+  "Juli. Ungfugler overalt, og mange voksne ser slitne og halvt myte ut.",
+  "August. Ungfuglene ligner ingenting i bøkene. Rogna begynner å modnes.",
+  "September. Løvet snur, og flokkene begynner å samle seg igjen.",
+  "Oktober. Brettet blir interessant igjen. Vinterfuglene kommer inn.",
+  "November. Bjørka er bar, og hagen tilhører meiser og finker.",
+  "Desember. Mørkt tidlig, og maten på brettet betyr mest akkurat nå."
+];
+
+/* ============================================================
+   6. TILSTAND
+   ============================================================ */
+const NOKKEL = "fuglevinduet:v1";
+const NOKKEL_BACKUP = "fuglevinduet:backup";
+
+const state = {
+  obs: [],            /* { art, tid } */
+  mat: [],            /* hva han tilbyr nå */
+  ungfugl: false,
+  frostAar: null,     /* året vi sist meldte fra om første frost */
+  idValg: {},         /* egenskapene han har krysset av i nøkkelen */
+  idHoppet: [],       /* egenskaper han svarte "vet ikke" på */
+  lagringFeilet: false,
+  wx: null,
+  wxStatus: "idle",
+  naa: new Date()
+};
+
+function lagre() {
+  try {
+    localStorage.setItem(NOKKEL, JSON.stringify({
+      schemaVersion: 1,
+      obs: state.obs, mat: state.mat,
+      ungfugl: state.ungfugl, frostAar: state.frostAar
+    }));
+    state.lagringFeilet = false;
+  } catch (e) {
+    /* Kvotefeil og privat modus kaster begge, og skrivingen skjedde ikke.
+       En app som lagrer av seg selv må si fra når den ikke fikk til det. */
+    state.lagringFeilet = true;
+  }
+}
+function last() {
+  try {
+    const raw = localStorage.getItem(NOKKEL);
+    if (!raw) return false;
+    const d = JSON.parse(raw);
+    state.obs = Array.isArray(d.obs) ? d.obs : [];
+    state.mat = Array.isArray(d.mat) ? d.mat : [];
+    state.ungfugl = !!d.ungfugl;
+    state.frostAar = d.frostAar || null;
+    return true;
+  } catch (e) { return false; }
+}
+
+/* ============================================================
+   7. TEGNING AV SCENEN
+   ============================================================ */
+const svg = document.getElementById("scene");
+const SVGNS = "http://www.w3.org/2000/svg";
+function el(navn, attr) {
+  const n = document.createElementNS(SVGNS, navn);
+  for (const k in attr) n.setAttribute(k, attr[k]);
+  return n;
+}
+
+/* Fast tilfeldighet. Samme frø gir samme hage hver eneste gang, så
+   treet står der han husker at det sto. */
+function slump(frø) {
+  let s = frø >>> 0;
+  return () => {
+    s = (s * 1664525 + 1013904223) >>> 0;
+    return s / 4294967296;
+  };
+}
+
+/* Rekursiv grein. Samler samtidig opp tuppene, som blir til sitteplasser. */
+function grein(ut, x, y, vinkel, lengde, tykk, dybde, rnd, o) {
+  const x2 = x + Math.cos(vinkel) * lengde;
+  const y2 = y + Math.sin(vinkel) * lengde;
+  const bue = (rnd() - 0.5) * lengde * 0.35;
+  const mx = (x + x2) / 2 + Math.cos(vinkel + Math.PI / 2) * bue;
+  const my = (y + y2) / 2 + Math.sin(vinkel + Math.PI / 2) * bue;
+  ut.greiner.push({ d: `M${x.toFixed(1)} ${y.toFixed(1)} Q ${mx.toFixed(1)} ${my.toFixed(1)} ${x2.toFixed(1)} ${y2.toFixed(1)}`,
+                    w: Math.max(1, tykk).toFixed(1) });
+  /* hvert greinledd huskes, ikke bare ytterste tupp: løvet skal sitte
+     langs de tynne greinene også, ellers blir kronen en lue på toppen */
+  ut.noder.push({ x: x2, y: y2, tykk });
+  if (dybde <= 0 || lengde < o.minLengde) { ut.tupper.push({ x: x2, y: y2 }); return; }
+  const n = rnd() < 0.3 ? 3 : 2;
+  for (let i = 0; i < n; i++) {
+    const ut_i = (i - (n - 1) / 2) / Math.max(1, (n - 1) / 2 || 1);
+    const av = o.spredning * (ut_i * 0.9 + (rnd() - 0.5) * 0.7);
+    grein(ut, x2, y2, vinkel + av, lengde * (0.62 + rnd() * 0.2),
+          tykk * 0.68, dybde - 1, rnd, o);
+  }
+}
+
+function byggTre(o) {
+  const ut = { greiner: [], tupper: [], noder: [] };
+  const rnd = slump(o.frø);
+  grein(ut, o.x, o.y, -Math.PI / 2, o.lengde, o.tykk, o.dybde, rnd, o);
+  return { ...ut, rnd };
+}
+
+/* Velger sitteplasser blant tuppene: godt spredt, og ikke for lavt. */
+function velgLuker(tupper, antall, minAvstand, boks) {
+  const kandidater = tupper
+    .filter(t => t.x > boks[0] && t.x < boks[2] && t.y > boks[1] && t.y < boks[3])
+    .sort((a, b) => a.y - b.y);
+  const valgt = [];
+  for (const t of kandidater) {
+    if (valgt.every(v => Math.hypot(v.x - t.x, v.y - t.y) > minAvstand)) valgt.push(t);
+    if (valgt.length >= antall) break;
+  }
+  return valgt;
+}
+
+function løvklase(mål, x, y, rnd, n, r) {
+  for (let k = 0; k < n; k++) {
+    const a = rnd() * Math.PI * 2, d = rnd() * r;
+    mål.appendChild(el("ellipse", {
+      cx: (x + Math.cos(a) * d).toFixed(1),
+      cy: (y + Math.sin(a) * d * 0.8).toFixed(1),
+      rx: (4 + rnd() * 3.5).toFixed(1), ry: (3 + rnd() * 2.5).toFixed(1),
+      transform: `rotate(${(rnd() * 120 - 60).toFixed(0)} ${x.toFixed(1)} ${y.toFixed(1)})`,
+      fill: "#000"
+    }));
+  }
+}
+
+/* Bygger alt som ikke endrer seg gjennom døgnet. Kalles én gang. */
+function byggScene() {
+  const rnd = slump(20260725);
+
+  /* --- stjerner --- */
+  const stars = document.getElementById("stars");
+  for (let i = 0; i < 110; i++) {
+    stars.appendChild(el("circle", {
+      cx: (rnd() * 1200).toFixed(1), cy: (rnd() * 420).toFixed(1),
+      r: (0.6 + rnd() * 1.5).toFixed(2), fill: "#ffffff",
+      opacity: (0.3 + rnd() * 0.7).toFixed(2)
+    }));
+  }
+
+  /* --- skyene. Opasiteten styres av skydekket i varselet. --- */
+  const sky = document.getElementById("clouds");
+  [[150, 96, 1], [430, 62, 0.8], [720, 110, 1.15], [1010, 74, 0.9], [560, 168, 0.7]]
+    .forEach(([cx, cy, s]) => {
+      const g = el("g", { transform: `translate(${cx} ${cy}) scale(${s})` });
+      [[-70, 8, 46, 20], [-24, -8, 54, 26], [30, 4, 44, 19], [66, 12, 32, 14]]
+        .forEach(([dx, dy, rx, ry]) =>
+          g.appendChild(el("ellipse", { cx: dx, cy: dy, rx, ry, fill: "#ffffff" })));
+      sky.appendChild(g);
+    });
+
+  /* --- naboskogen i bakgrunnen: en takket granrand langs åskammen --- */
+  const skog = document.getElementById("treeline");
+  let sx = -10;
+  while (sx < 1210) {
+    const h = 20 + rnd() * 26;
+    const b = 7 + rnd() * 7;
+    const basis = 400 + rnd() * 8;
+    skog.appendChild(el("path", {
+      d: `M${sx.toFixed(1)} ${basis.toFixed(1)} L${(sx + b).toFixed(1)} ${(basis - h).toFixed(1)}` +
+         ` L${(sx + b * 2).toFixed(1)} ${basis.toFixed(1)} Z`
+    }));
+    sx += b * 1.35;
+  }
+
+  /* --- gjerdet, med stolper som også blir sitteplasser --- */
+  const gj = document.getElementById("fence");
+  const gjerdeLuker = [];
+  for (let x = 24; x < 1200; x += 88) {
+    gj.insertBefore(el("rect", { x, y: 386, width: 10, height: 62, rx: 2 }), gj.firstChild);
+    if (x > 120 && x < 1000) gjerdeLuker.push({ x: x + 5, y: 387 });
+  }
+  LUKER.gjerde = [gjerdeLuker[1], gjerdeLuker[3], gjerdeLuker[8]].filter(Boolean);
+
+  /* --- grana til venstre. Tegnet som overlappende hengende kranser
+         med takket underkant, ikke som stablede trekanter. --- */
+  const gran = document.getElementById("spruce");
+  const snøGran = document.getElementById("snowSpruce");
+  gran.appendChild(el("path", { d: "M132 452 L136 250 L146 250 L150 452 Z", fill: "#4a3826" }));
+  const granLuker = [];
+  for (let i = 0; i < 11; i++) {
+    const t = i / 10;
+    const cy = 108 + t * 300;
+    const bredde = 22 + Math.pow(t, 0.85) * 112;
+    const dropp = 24 + t * 26;
+    const takker = 6 + i;
+    let d = `M141 ${(cy - 30).toFixed(1)} L${(141 + bredde).toFixed(1)} ${(cy + dropp).toFixed(1)}`;
+    for (let k = takker; k >= -takker; k--) {
+      const px = 141 + (bredde * k) / takker;
+      const dyp = k === 0 ? dropp * 0.55 : dropp - 11 * ((k + takker) % 2);
+      d += ` L${px.toFixed(1)} ${(cy + dyp).toFixed(1)}`;
+    }
+    d += " Z";
+    gran.appendChild(el("path", { d, fill: i % 2 ? "#3a5a41" : "#446a4b" }));
+    snøGran.appendChild(el("path", { d, fill: "#eef3f7",
+                                     opacity: (0.28 + t * 0.22).toFixed(2) }));
+    if (i >= 4 && i <= 6) granLuker.push({ x: 141 + bredde * 0.66, y: cy + dropp * 0.72 });
+  }
+  LUKER.gran = granLuker;
+
+  /* --- furua ytterst til høyre. Skogsfuru med bar nedre stamme,
+         oransje bark oppe og en flat, klumpete krone. Den formen er
+         det mest stedegne som finnes på Tjøme. --- */
+  const furu = byggTre({ x: 1104, y: 268, lengde: 58, tykk: 15, dybde: 3,
+                         spredning: 0.92, minLengde: 17, frø: 1881 });
+  const furuG = document.getElementById("pine");
+  furuG.appendChild(el("path", {
+    d: "M1088 452 C 1090 400, 1096 330, 1097 268 L1113 268 C 1115 330, 1120 400, 1124 452 Z",
+    fill: "#6b5744"
+  }));
+  furuG.appendChild(el("path", {   /* den oransje øvre stammen */
+    d: "M1096 330 C 1096 306, 1097 286, 1097 268 L1113 268 C 1114 286, 1115 306, 1116 330 Z",
+    fill: "#a97049"
+  }));
+  furu.greiner.forEach(g => furuG.appendChild(el("path", {
+    d: g.d, stroke: "#8a6446", "stroke-width": g.w, fill: "none", "stroke-linecap": "round"
+  })));
+  /* nålemassen: flate, overlappende puter, ikke runde løvklaser */
+  const furuKrone = el("g", {});
+  furu.tupper.concat([{ x: 1104, y: 150 }, { x: 1042, y: 186 }, { x: 1168, y: 190 }])
+    .forEach((t, i) => {
+      for (let k = 0; k < 4; k++) {
+        furuKrone.appendChild(el("ellipse", {
+          cx: (t.x + (furu.rnd() - 0.5) * 34).toFixed(1),
+          cy: (t.y + (furu.rnd() - 0.5) * 20).toFixed(1),
+          rx: (20 + furu.rnd() * 16).toFixed(1), ry: (7 + furu.rnd() * 5).toFixed(1),
+          fill: (i + k) % 2 ? "#3b5a42" : "#456a4c", opacity: 0.92
+        }));
+      }
+    });
+  furuG.appendChild(furuKrone);
+  LUKER.furu = velgLuker(furu.tupper, 2, 70, [1000, 150, 1195, 280]);
+
+  /* --- rogna, mindre og lenger inn. Bærene er grunnen til at
+         sidensvansen i det hele tatt dukker opp (PRD §6.4). --- */
+  const rogn = byggTre({ x: 916, y: 396, lengde: 52, tykk: 12, dybde: 4,
+                         spredning: 0.7, minLengde: 10, frø: 4711 });
+  const rognG = document.getElementById("rowan");
+  rognG.appendChild(el("path", { d: "M906 452 L910 396 L922 396 L926 452 Z", fill: "#6b5a44" }));
+  rogn.greiner.forEach(g => rognG.appendChild(el("path", {
+    d: g.d, stroke: "#6b5a44", "stroke-width": g.w, fill: "none", "stroke-linecap": "round"
+  })));
+  const rløv = document.getElementById("rowanLeaves");
+  rogn.noder.filter(n => n.tykk < 5)
+            .forEach(n => løvklase(rløv, n.x, n.y, rogn.rnd, 5, 14));
+  const bær = document.getElementById("rowanBerries");
+  rogn.tupper.forEach((t, i) => {
+    if (i % 2) return;
+    for (let k = 0; k < 6; k++) {
+      bær.appendChild(el("circle", {
+        cx: (t.x + (rogn.rnd() - 0.5) * 18).toFixed(1),
+        cy: (t.y + rogn.rnd() * 14).toFixed(1),
+        r: (2.2 + rogn.rnd()).toFixed(1), fill: "#c0442e"
+      }));
+    }
+  });
+  LUKER.rogn = velgLuker(rogn.tupper, 3, 48, [850, 250, 1000, 380]);
+
+  /* --- bjørka. Stammen er en egen avsmalnende form, så greinverket
+         starter oppe i kronen og ikke som en kølle nede ved bakken. --- */
+  const bjørkG = document.getElementById("birch");
+  bjørkG.appendChild(el("path", {
+    d: "M396 452 C 398 400, 404 350, 405 300 L423 300 C 424 350, 428 400, 432 452 Z",
+    fill: "#e4e1d4"
+  }));
+  bjørkG.appendChild(el("path", {
+    d: "M423 300 C 424 350, 428 400, 432 452 L424 452 C 421 400, 417 350, 416 300 Z",
+    fill: "#c9c5b6", opacity: 0.8
+  }));
+  const bjørk = byggTre({ x: 414, y: 302, lengde: 92, tykk: 17, dybde: 6,
+                          spredning: 0.52, minLengde: 11, frø: 90210 });
+  bjørk.greiner.forEach(g => bjørkG.appendChild(el("path", {
+    d: g.d, stroke: "#e4e1d4", "stroke-width": g.w, fill: "none", "stroke-linecap": "round"
+  })));
+  /* barkmerkene, bare på den tykke delen av stammen */
+  const merker = el("g", { fill: "#3f4038", opacity: 0.6 });
+  [[400,330,17,5],[412,378,12,4],[400,414,16,5],[410,442,11,4]]
+    .forEach(([x,y,w,h]) => merker.appendChild(el("rect", { x, y, width: w, height: h, rx: 2 })));
+  bjørkG.appendChild(merker);
+  const bløv = document.getElementById("birchLeaves");
+  bjørk.noder.filter(n => n.tykk < 7)
+             .forEach(n => løvklase(bløv, n.x, n.y, bjørk.rnd, 7, 22));
+  LUKER.trekrone = velgLuker(bjørk.tupper, 4, 58, [190, 80, 660, 310]);
+
+  /* snø på greinene: korte streker oppå de grove greinene */
+  const snøG = document.getElementById("snowBranch");
+  bjørk.greiner.concat(rogn.greiner).forEach(g => {
+    if (parseFloat(g.w) < 4) return;
+    snøG.appendChild(el("path", {
+      d: g.d, stroke: "#eef3f7", "stroke-width": (parseFloat(g.w) * 0.55).toFixed(1),
+      fill: "none", "stroke-linecap": "round", transform: "translate(0 -2)"
+    }));
+  });
+
+  /* --- stammen: tre høyder langs høyre kant, der klatrerne griper.
+         Alle fire klatrebildene har klørne mot venstre, så de må stå
+         på høyre side av stammen for å se ut som de holder i den. --- */
+  LUKER.trestamme = [{ x: 422, y: 326 }, { x: 426, y: 382 }, { x: 430, y: 436 }];
+
+  /* --- brettet: nedre pinne, øvre pinne, hengende under, og taket --- */
+  LUKER.mateplass = [
+    { x: 568, y: 336 },   /* 0 toppmeis, nedre pinne ytterst til venstre */
+    { x: 712, y: 336 },   /* 1 granmeis, nedre pinne ytterst til høyre */
+    { x: 640, y: 341 },   /* 2 kjøttmeis, henger under nedre pinne */
+    { x: 594, y: 318 },   /* 3 blåmeis, øvre pinne */
+    { x: 686, y: 318 },   /* 4 svartmeis, øvre pinne */
+    { x: 600, y: 336 },   /* 5 grønnfink */
+    { x: 680, y: 336 },   /* 6 pilfink */
+    { x: 676, y: 248 }    /* 7 kjernebiter, på taket */
+  ];
+
+  /* --- tistelbedet --- */
+  const tist = document.getElementById("thistles");
+  let høyest = null;
+  for (let i = 0; i < 17; i++) {
+    const x = 596 + i * 10.5 + (rnd() - 0.5) * 9;
+    const h = 62 + rnd() * 52;
+    tist.appendChild(el("path", {
+      d: `M${x.toFixed(1)} 578 C ${(x - 6).toFixed(1)} ${(578 - h * 0.5).toFixed(1)},` +
+         ` ${(x + 6).toFixed(1)} ${(578 - h * 0.72).toFixed(1)}, ${x.toFixed(1)} ${(578 - h).toFixed(1)}`,
+      stroke: "#6d7a4e", "stroke-width": 2.6, fill: "none",
+      "stroke-linecap": "round", class: "tistel-stilk"
+    }));
+    tist.appendChild(el("ellipse", { cx: x.toFixed(1), cy: (578 - h - 5).toFixed(1),
+                                     rx: 5.5, ry: 7.5, fill: "#7d6a86", class: "tistel-hode" }));
+    tist.appendChild(el("ellipse", { cx: x.toFixed(1), cy: (578 - h - 11).toFixed(1),
+                                     rx: 4.6, ry: 4.6, fill: "#ab95b3", opacity: 0.9,
+                                     class: "tistel-dusk" }));
+    if (!høyest || h > høyest.h) høyest = { x, h };
+  }
+  /* stillitsen får den høyeste tistelen */
+  LUKER.tistel = [{ x: høyest.x, y: 578 - høyest.h - 12 }];
+
+  /* --- bakken: gresstuster og et par steiner, så flaten får dybde --- */
+  const dekk = document.getElementById("groundCover");
+  for (let i = 0; i < 170; i++) {
+    const x = rnd() * 1200;
+    const y = 452 + Math.pow(rnd(), 0.7) * 164;
+    const h = 5 + (y - 452) / 164 * 13;
+    dekk.appendChild(el("path", {
+      d: `M${x.toFixed(1)} ${y.toFixed(1)} q ${(rnd()*5-2.5).toFixed(1)} ${(-h*0.6).toFixed(1)}` +
+         ` ${(rnd()*7-3.5).toFixed(1)} ${(-h).toFixed(1)}`,
+      stroke: y > 540 ? "#5d6b3f" : "#6a7848", "stroke-width": 1.6,
+      fill: "none", "stroke-linecap": "round", opacity: 0.75
+    }));
+  }
+  [[92,530,26,10],[1148,568,32,12],[706,494,18,7]].forEach(([x,y,rx,ry]) =>
+    dekk.appendChild(el("ellipse", { cx: x, cy: y, rx, ry, fill: "#7d7f72", opacity: 0.7 })));
+
+  /* --- bakkeplasser, fordelt i dybden så størrelsesforskjellene leses --- */
+  LUKER.bakken = [
+    { x: 336, y: 498 },   /* 0 rødstrupe, lengst bak og minst */
+    { x: 176, y: 532 },   /* 1 svarttrost */
+    { x: 448, y: 558 },   /* 2 stær */
+    { x: 998, y: 534 },   /* 3 ringdue */
+    { x: 250, y: 602 },   /* 4 skjære, helt framme */
+    { x: 872, y: 606 }    /* 5 kråke, helt framme */
+  ];
+
+  LUKER.i_lufta = [{ x: 782, y: 128 }];
+}
+
+/* Lyset. Kalles hvert minutt. */
+function tegnLys() {
+  const s = solar(state.naa, HOME.lat, HOME.lon);
+  const f = himmelFarger(s.hoyde);
+  document.getElementById("skyTop").setAttribute("stop-color", f[0]);
+  document.getElementById("skyMid").setAttribute("stop-color", f[1]);
+  document.getElementById("skyBot").setAttribute("stop-color", f[2]);
+
+  /* stjerner og vinduslys kommer fram etter borgerlig skumring */
+  const natt = 1 - rampe(s.hoyde, -14, -4);
+  document.getElementById("stars").setAttribute("opacity", (natt * 0.95).toFixed(3));
+  document.getElementById("houseLights").setAttribute("opacity", (1 - rampe(s.hoyde, -6, 2)).toFixed(3));
+  document.getElementById("nightVeil").setAttribute("opacity", (0.66 * (1 - rampe(s.hoyde, -12, 3))).toFixed(3));
+  /* lavtstående sol legger et varmt slør over hagen */
+  const varmt = Math.max(0, Math.min(1, 1 - Math.abs(s.hoyde - 3) / 9));
+  document.getElementById("warmVeil").setAttribute("opacity", (varmt * 0.22).toFixed(3));
+
+  /* sol og måne. Asimut 60 til 300 grader spennes over scenens bredde,
+     slik at sola står opp til venstre og går ned til høyre. */
+  const x = 1200 * Math.max(-0.08, Math.min(1.08, (s.asimut - 60) / 240));
+  const y = 452 - 400 * Math.max(-0.05, Math.min(1, s.hoyde / 52));
+  const solSynlig = s.hoyde > -7;
+  ["sunDisc","sunGlow"].forEach(id => {
+    const n = document.getElementById(id);
+    n.setAttribute("cx", x.toFixed(1)); n.setAttribute("cy", y.toFixed(1));
+    n.setAttribute("opacity", solSynlig ? 1 : 0);
+  });
+  document.getElementById("sunDisc").setAttribute("fill",
+    s.hoyde < 6 ? "#ffd08a" : "#fff3cf");
+
+  /* Månen er ikke beregnet, den er en stemningslampe: den står motsatt
+     sola, så nattehimmelen ikke er tom. Ingen påstand om fase eller sted. */
+  const m = document.getElementById("moon");
+  m.setAttribute("opacity", natt.toFixed(3));
+  const mx = 1200 - x, my = 452 - 300 * Math.max(0.15, Math.min(1, -s.hoyde / 40));
+  document.getElementById("moonDisc").setAttribute("cx", mx.toFixed(1));
+  document.getElementById("moonDisc").setAttribute("cy", my.toFixed(1));
+  document.getElementById("moonBite").setAttribute("cx", (mx + 9).toFixed(1));
+  document.getElementById("moonBite").setAttribute("cy", (my - 7).toFixed(1));
+  return s;
+}
+
+/* Årstiden. Kalles ved lasting og ved døgnskifte. */
+function tegnArstid() {
+  const { mengde, gult } = lovverk(state.naa);
+  const løv = document.getElementById("birchLeaves");
+  løv.setAttribute("opacity", mengde.toFixed(3));
+  const farge = blandFarge("#7fa054", "#d8a83c", gult);
+  løv.querySelectorAll("ellipse").forEach(e => e.setAttribute("fill", farge));
+
+  const rløv = document.getElementById("rowanLeaves");
+  rløv.setAttribute("opacity", mengde.toFixed(3));
+  rløv.querySelectorAll("ellipse").forEach(e =>
+    e.setAttribute("fill", blandFarge("#5f7f46", "#c07434", gult)));
+
+  document.getElementById("rowanBerries").setAttribute("opacity", rognbaer(state.naa).toFixed(3));
+
+  /* Tistlene visner, men blir stående. Nettopp derfor er de en
+     vintermatkilde for stillits: det er de tørre frøhodene den er ute
+     etter. Så de brunes, de forsvinner ikke. */
+  const visnet = 1 - mengde;
+  const sett = (velger, sommer, vinter) =>
+    document.querySelectorAll(velger).forEach(n =>
+      n.setAttribute("fill", blandFarge(sommer, vinter, visnet)));
+  document.querySelectorAll(".tistel-stilk").forEach(n =>
+    n.setAttribute("stroke", blandFarge("#6d7a4e", "#8a7c5a", visnet)));
+  sett(".tistel-hode", "#7d6a86", "#8d7b58");
+  sett(".tistel-dusk", "#ab95b3", "#b7a684");
+}
+
+/* ============================================================
+   8. FUGLENE I SCENEN
+   ============================================================ */
+function art(id) { return ARTER.find(a => a.id === id); }
+
+/* Hvor stor fuglen skal tegnes, regnet ut fra data og bildemål,
+   ikke fra håndjusterte tall per art. */
+function bildeMaal(a) {
+  const bb = BBOX[a.id], sp = SPAN[a.id];
+  const cm = SPAN_CM[a.id] || a.skala * 47;
+  const lengdePx = (cm / 47) * REF_PX;
+  const skala = lengdePx / (sp * 512);        /* kildebildene er 512 px */
+  const anker = ANKER[a.id] || [0.5, 0.99];
+  return {
+    bredde: 512 * skala,
+    hoyde: 512 * skala,
+    /* ankerpunktet, i piksler fra bildets øvre venstre hjørne */
+    ax: (bb[0] + bb[2] * anker[0]) * 512 * skala,
+    ay: (bb[1] + bb[3] * anker[1]) * 512 * skala
+  };
+}
+
+function iToppsesong(a, mnd) { return a.sesong_topp.includes(mnd); }
+function harSett(id) { return state.obs.some(o => o.art === id); }
+
+/* Hovedmålene fra PRD §6.4. Sidensvansen er den store, resten er
+   de som er verdt å vente på. De får alltid stå som silhuett. */
+const MAAL = ["sidensvans", "kjernebiter", "spurvehauk", "dompap"];
+
+/* Hvilke usette arter som får silhuett. Alle tretti samtidig ble
+   et mylder, og et mylder gir ingen lengsel. Hovedmålene først,
+   så noen få som er i sesong nå. Aldri mer enn ni. */
+function silhuetter(mnd) {
+  const usett = ARTER.filter(a => !harSett(a.id) && SCENE[a.id]);
+  const valgt = usett.filter(a => MAAL.includes(a.id)).map(a => a.id);
+  usett
+    .filter(a => !valgt.includes(a.id))
+    .sort((a, b) => (iToppsesong(b, mnd) - iToppsesong(a, mnd)) ||
+                    (a.sjeldenhet === "vanlig" ? -1 : 1))
+    .forEach(a => { if (valgt.length < 9) valgt.push(a.id); });
+  return new Set(valgt);
+}
+
+/* Fire tilstander, PRD §6.4.
+   Merk: "utenfor" avhenger av `sesong`, ikke av `sesong_topp`.
+   Slik dataene er skrevet i dag lister alle tretti artene alle tolv
+   månedene i `sesong`, så ingen fugl blir noen gang nedtonet. Det er
+   et bevisst valg i dataene, ikke en feil her: skal sidensvansen
+   forsvinne fra scenen om sommeren, må `sesong` i arter.json snevres
+   inn for den arten. `sesong_topp` styrer bare rangering og hvilke
+   silhuetter som vises. */
+function fuglTilstand(a, mnd, sil) {
+  if (harSett(a.id)) return a.sesong.includes(mnd) ? "full" : "utenfor";
+  return sil.has(a.id) ? "silhuett" : "borte";
+}
+
+/* Når kommer den vanligvis tilbake? Brukes i hover-teksten på de
+   nedtonede fuglene. */
+function tilbakeTekst(a) {
+  const m = a.sesong_topp;
+  if (!m.length) return "";
+  /* første måned i toppsesongen sett fra nå */
+  const naa = state.naa.getMonth() + 1;
+  let best = null, bestAvstand = 99;
+  m.forEach(x => { const d = (x - naa + 12) % 12; if (d < bestAvstand) { bestAvstand = d; best = x; } });
+  return "kommer som regel tilbake i " + MND[best - 1];
+}
+
+function tegnFugler() {
+  const lag = document.getElementById("birdLayer");
+  lag.textContent = "";
+  const mnd = state.naa.getMonth() + 1;
+  const sil = silhuetter(mnd);
+
+  ARTER.forEach(a => {
+    const p = SCENE[a.id];
+    if (!p) return;
+    const luke = (LUKER[p.plass] || [])[p.luke];
+    if (!luke) return;
+    const tilstand = fuglTilstand(a, mnd, sil);
+    if (tilstand === "borte") return;
+
+    const m = bildeMaal(a);
+    const g = el("g", { class: "hit", tabindex: 0, role: "button" });
+    g.dataset.art = a.id;
+    g.dataset.tilstand = tilstand;
+
+    const tittel = el("title", {});
+    tittel.textContent =
+      tilstand === "silhuett" ? a.navn + ", ikke sett ennå" :
+      tilstand === "utenfor"  ? a.navn + ", " + tilbakeTekst(a) :
+                                a.navn + " " + (PLASS_NAVN[p.plass] || "");
+    g.appendChild(tittel);
+
+    const img = el("image", {
+      href: "birds/" + a.illustrasjon,
+      x: 0, y: 0, width: m.bredde.toFixed(1), height: m.hoyde.toFixed(1),
+      class: "bird-img"
+    });
+    if (tilstand === "silhuett") {
+      img.setAttribute("opacity", "0.2");
+      img.setAttribute("filter", "url(#flat)");
+    } else if (tilstand === "utenfor") {
+      img.setAttribute("opacity", "0.3");
+    }
+
+    /* speiling gjøres om ankerpunktet, så fuglen blir stående på samme sted */
+    const sx = p.speil ? -1 : 1;
+    g.setAttribute("transform",
+      `translate(${luke.x.toFixed(1)} ${luke.y.toFixed(1)}) scale(${sx} 1) ` +
+      `translate(${(-m.ax).toFixed(1)} ${(-m.ay).toFixed(1)})`);
+    g.appendChild(img);
+    lag.appendChild(g);
+  });
+}
+
+/* ============================================================
+   9. ORD
+   Nøklene i dataene er ASCII. Alt som vises fram står her.
+   ============================================================ */
+const ORD = {
+  storrelse: {
+    mindre_enn_spurv: "Mindre enn en spurv",
+    som_spurv: "Omtrent som en spurv",
+    mellom: "Mellom spurv og svarttrost",
+    som_svarttrost: "Omtrent som en svarttrost",
+    storre: "Større enn en svarttrost"
+  },
+  atferd: {
+    henger_opp_ned: "Hang opp ned",
+    hodet_ned_nedover_stamme: "Gikk nedover stammen med hodet først",
+    spiraler_oppover_stamme: "Krøp oppover stammen i spiral",
+    hakker_pa_stamme: "Hakket på stammen",
+    gar_pa_bakken: "Gikk på bakken",
+    hopper_pa_bakken: "Hoppet på bakken",
+    tar_fro_og_flyr_vekk: "Tok et frø og fløy vekk med det",
+    flokk: "Var flere sammen",
+    alene: "Var alene",
+    i_lufta: "Var i lufta"
+  },
+  bryst: {
+    gult_med_svart_stripe: "Gult med svart stripe",
+    gult_uten_stripe: "Gult uten stripe",
+    rosa_rodt: "Rosa eller rødt",
+    oransje_strupe: "Oransje strupe",
+    svart: "Svart", beige_brunt: "Beige eller brunt", hvitt: "Hvitt",
+    stripet: "Stripet", flekkete: "Flekkete"
+  },
+  hode: {
+    svart_hvit: "Svart og hvitt", blaa_hvit_svart: "Blått, hvitt og svart",
+    svart_hette: "Svart hette", hvit_nakkeflekk: "Hvit flekk i nakken",
+    svart_hvit_topp: "Fjærtopp, svart og hvit", stripet: "Stripet",
+    hvit_svart_maska: "Hvitt med svart og rød maske", svart: "Helsvart",
+    gronn: "Grønt", gul_brun: "Gult og brunt", graa_brun: "Grått og brunt",
+    kastanje_svart_hvit: "Kastanjebrun isse med svart kinnflekk",
+    beige_brunt: "Beige eller brunt", graa: "Grått",
+    mork_metallisk: "Mørkt og metallisk", svart_hvit_rod: "Svart og hvitt med rødt",
+    brun_svart: "Brunt og svart", mork_maske: "Fjærtopp og mørk maske"
+  },
+  nebb: {
+    tynt_spisst: "Tynt og spisst", tykt_kjegleformet: "Tykt og kjegleformet",
+    meiselformet: "Meiselformet", langt_tynt_boeyd: "Langt, tynt og bøyd",
+    kraftig_stort: "Kraftig og stort"
+  },
+  sted: {
+    mateplass: "På fuglebrettet", bakken: "På bakken", trestamme: "På en trestamme",
+    gjerde: "På gjerdet", trekrone: "Oppe i et tre", i_lufta: "I lufta"
+  }
+};
+function ordFor(attr, verdi) {
+  return (ORD[attr] && ORD[attr][verdi]) || (verdi.charAt(0).toUpperCase() + verdi.slice(1));
+}
+
+/* ============================================================
+   10. BESTEMMELSESNØKKELEN
+   Rene funksjoner, ingen DOM. PRD §5.
+   ============================================================ */
+const EGENSKAPER = [
+  { n: "storrelse", liste: false, sp: "Hvor stor var den?" },
+  { n: "atferd",    liste: true,  sp: "Hva gjorde den?" },
+  { n: "bryst",     liste: false, sp: "Hvilken farge hadde brystet?" },
+  { n: "hode",      liste: false, sp: "Hvordan så hodet ut?" },
+  { n: "nebb",      liste: false, sp: "Hva slags nebb hadde den?" },
+  { n: "sted",      liste: true,  sp: "Hvor var den?" },
+  { n: "for",       liste: true,  sp: "Spiste den noe?" }
+];
+const ER_LISTE = Object.fromEntries(EGENSKAPER.map(e => [e.n, e.liste]));
+
+/* Ungfugldrakt: unge rødstruper har ikke rød strupe, unge kjøttmeis er
+   vaskede ut. Da kan farge på bryst og hode ikke få lov til å utelukke
+   noen. De filtrerer ikke, men teller fortsatt ved rangering. */
+const MYK_NAR_UNGFUGL = ["bryst", "hode"];
+
+function passer(a, attr, verdi) {
+  return ER_LISTE[attr] ? a[attr].includes(verdi) : a[attr] === verdi;
+}
+
+function filtrer(arter, valg, ungfugl) {
+  return arter.filter(a => Object.keys(valg).every(k =>
+    (ungfugl && MYK_NAR_UNGFUGL.includes(k)) ? true : passer(a, k, valg[k])
+  ));
+}
+
+function log2(x) { return Math.log(x) / Math.LN2; }
+
+/* Informasjonsgevinst. For skalarer er dette en vanlig partisjon.
+   For listeegenskaper kan én art ha flere verdier, så et svar er
+   "denne verdien gjaldt", og forventet rest veies etter hvor mange
+   arter hver verdi dekker. */
+function gevinst(kandidater, attr) {
+  const n = kandidater.length;
+  if (n <= 1) return 0;
+  const H0 = log2(n);
+  if (!ER_LISTE[attr]) {
+    const grupper = {};
+    kandidater.forEach(a => { (grupper[a[attr]] = grupper[a[attr]] || []).push(a); });
+    const rest = Object.values(grupper)
+      .reduce((s, g) => s + (g.length / n) * log2(g.length), 0);
+    return H0 - rest;
+  }
+  const verdier = new Set();
+  kandidater.forEach(a => a[attr].forEach(v => verdier.add(v)));
+  let tot = 0;
+  const storrelser = [];
+  verdier.forEach(v => {
+    const k = kandidater.filter(a => a[attr].includes(v)).length;
+    storrelser.push(k); tot += k;
+  });
+  if (!tot) return 0;
+  const rest = storrelser.reduce((s, k) => s + (k / tot) * log2(k), 0);
+  return H0 - rest;
+}
+
+function nesteSporsmal(kandidater, valg, ungfugl) {
+  let best = null, bestG = 0.0001;
+  EGENSKAPER.forEach(e => {
+    if (valg[e.n] !== undefined) return;
+    if (ungfugl && MYK_NAR_UNGFUGL.includes(e.n)) return;
+    const g = gevinst(kandidater, e.n);
+    if (g > bestG) { bestG = g; best = e; }
+  });
+  return best;
+}
+
+/* Vanlige arter flyter opp, og arter utenfor sin beste tid synker.
+   Ingen blir utelukket på grunn av årstiden: sjeldenheter skjer, og
+   å skjule dem ville lære ham at appen tar feil. */
+function rangér(kandidater, mnd) {
+  return kandidater.slice().sort((a, b) => vekt(a, mnd) - vekt(b, mnd) ||
+                                           a.navn.localeCompare(b.navn, "nb"));
+}
+function vekt(a, mnd) {
+  return (a.sesong.includes(mnd) ? 0 : 100) +
+         (a.sesong_topp.includes(mnd) ? 0 : 10) +
+         (a.sjeldenhet === "vanlig" ? 0 : 5);
+}
+
+/* Hva skiller kandidatene fra hverandre? Finner den egenskapen der de
+   faktisk er ulike, og viser den verdien hver av dem har. */
+function skillemerke(kandidater) {
+  if (kandidater.length < 2) return {};
+  let best = null, flest = 1;
+  ["hode", "bryst", "nebb", "storrelse", "atferd"].forEach(attr => {
+    const verdier = new Set(kandidater.map(a =>
+      ER_LISTE[attr] ? a[attr].slice().sort().join("+") : a[attr]));
+    if (verdier.size > flest) { flest = verdier.size; best = attr; }
+  });
+  if (!best) return {};
+  const ut = {};
+  kandidater.forEach(a => {
+    ut[a.id] = ER_LISTE[best]
+      ? a[best].map(v => ordFor(best, v)).join(", ")
+      : ordFor(best, a[best]);
+  });
+  return ut;
+}
+
+/* ============================================================
+   11. MATEN
+   Én rad med brytere som avgrenser forventningene. Ikke noe mer.
+   ============================================================ */
+const MATVALG = ["solsikkefrø", "talgboller", "nøtter", "nigerfrø",
+                 "frøblanding", "melorm", "eplebiter", "vann"];
+
+/* Bryterne er hverdagsord. Dataene bruker sine egne. Her er broen. */
+const MAT_TIL_DATA = {
+  "solsikkefrø": ["solsikkefrø"],
+  "talgboller":  ["talg", "meisebolle"],
+  "nøtter":      ["nøtter", "hasselnøtter"],
+  "nigerfrø":    ["nigerfrø", "tistel"],
+  "frøblanding": ["frøblanding", "småfrø", "frø", "korn", "havre", "hampefrø",
+                  "orfrø", "bjørkefrø", "smuler", "matrester"],
+  "melorm":      ["insekter", "larver", "meitemark", "mark", "edderkopper"],
+  "eplebiter":   ["epler", "frukt", "bær", "kirsebærstein"],
+  "vann":        []
+};
+
+function tiltrekkes(a, mat) {
+  const ønsket = new Set(mat.flatMap(m => MAT_TIL_DATA[m] || []));
+  return a.for.some(f => ønsket.has(f));
+}
+
+/* Ett forslag om gangen, aldri en liste over alt han kunne kjøpt. */
+function matforslag(mat) {
+  const mangler = MATVALG.filter(m => !mat.includes(m) && MAT_TIL_DATA[m].length);
+  let best = null, bestAntall = 0;
+  mangler.forEach(m => {
+    const nye = ARTER.filter(a => !tiltrekkes(a, mat) && tiltrekkes(a, mat.concat([m])));
+    if (nye.length > bestAntall) { bestAntall = nye.length; best = { mat: m, arter: nye }; }
+  });
+  if (!best) return null;
+  const navn = best.arter.slice(0, 3).map(a => a.navn.toLowerCase()).join(", ");
+  if (best.mat === "nigerfrø") {
+    return "Nigerfrø i en finmasket automat er den klassiske stillitsmaten. " +
+           "Grønnsisik tar det fra samme automat.";
+  }
+  return "Setter du ut " + best.mat + ", kan det trekke til seg " + navn + ".";
+}
+
+/* ============================================================
+   12. VÆR
+   Open-Meteo, ikke MET direkte: nettlesere får ikke sette
+   User-Agent, som MET krever. Open-Meteo bygger på de samme
+   nasjonale varslene, deriblant MET Norge. Alt her tåler at
+   forespørselen feiler.
+   ============================================================ */
+const WX_NOKKEL = "fuglevinduet:wx";
+const WX_MAKS_ALDER = 60 * 60 * 1000;
+
+function lastWx() {
+  try {
+    const w = JSON.parse(localStorage.getItem(WX_NOKKEL) || "null");
+    return (w && typeof w.hentet === "number") ? w : null;
+  } catch (e) { return null; }
+}
+function lagreWx(w) {
+  try { localStorage.setItem(WX_NOKKEL, JSON.stringify(w)); } catch (e) {}
+}
+
+function hentVaer(tving) {
+  if (state.wxStatus === "laster") return;
+  if (!tving && state.wx && Date.now() - state.wx.hentet < WX_MAKS_ALDER) return;
+  const lat = Math.round(HOME.lat * 10000) / 10000;
+  const lon = Math.round(HOME.lon * 10000) / 10000;
+  const url = "https://api.open-meteo.com/v1/forecast?latitude=" + lat +
+    "&longitude=" + lon +
+    "&hourly=temperature_2m,precipitation,snowfall,snow_depth,wind_speed_10m," +
+    "weather_code,cloud_cover,surface_pressure" +
+    "&timezone=" + encodeURIComponent(HOME.tz) +
+    "&forecast_days=2&wind_speed_unit=ms";
+  state.wxStatus = "laster";
+  fetch(url)
+    .then(r => { if (!r.ok) throw new Error("HTTP " + r.status); return r.json(); })
+    .then(j => {
+      if (!j.hourly || !j.hourly.time) throw new Error("Uventet svar");
+      state.wx = { t: j.hourly, hentet: Date.now() };
+      state.wxStatus = "ok";
+      lagreWx(state.wx);
+      tegnAlt();
+    })
+    .catch(() => { state.wxStatus = "feil"; tegnAlt(); });
+}
+
+/* Finner timen vi står i. Tidsstemplene er lokal veggklokke uten
+   sone-endelse, akkurat slik timezone-parameteren ber om. */
+function naaTime() {
+  if (!state.wx) return null;
+  const d = state.naa;
+  const nøkkel = d.getFullYear() + "-" +
+    String(d.getMonth() + 1).padStart(2, "0") + "-" +
+    String(d.getDate()).padStart(2, "0") + "T" +
+    String(d.getHours()).padStart(2, "0") + ":00";
+  const i = state.wx.t.time.indexOf(nøkkel);
+  return i < 0 ? null : i;
+}
+
+function vaerNaa() {
+  const i = naaTime();
+  if (i === null) return null;
+  const t = state.wx.t;
+  const les = (k, d) => (t[k] && t[k][i] != null) ? t[k][i] : d;
+  return {
+    i,
+    temp: les("temperature_2m", null),
+    nedbor: les("precipitation", 0),
+    snofall: les("snowfall", 0),
+    snodybde: les("snow_depth", 0),
+    vind: les("wind_speed_10m", 0),
+    kode: les("weather_code", 0),
+    skyer: les("cloud_cover", 40),
+    trykk: les("surface_pressure", null)
+  };
+}
+
+function nedborType(kode) {
+  if ([71,73,75,77,85,86].includes(kode)) return "sno";
+  if ([56,57,66,67].includes(kode)) return "sludd";
+  if ([51,53,55,61,63,65,80,81,82,95,96,99].includes(kode)) return "regn";
+  return "ingen";
+}
+
+/* ============================================================
+   13. AKTIVITETSVARSEL
+   Fire ord, aldri et tall. PRD §7.2.
+   ============================================================ */
+const NIVAA = ["Rolig", "Vanlig", "Livlig", "Svært livlig"];
+
+function aktivitet(v, sol) {
+  if (!v || v.temp === null) return null;
+  let p = 1;
+  const grunner = [];
+  if (v.temp < 0)   { p += 1; grunner.push("det er frost"); }
+  if (v.temp < -10) { p += 2; grunner.push("det er streng kulde"); }
+  if (v.snofall > 0.2 || v.snodybde > 0.03) { p += 2; grunner.push("snø dekker maten på bakken"); }
+  if (v.vind > 8)  { p -= 1; grunner.push("det blåser"); }
+  if (v.vind > 12) { p -= 1; }
+  if (v.nedbor > 2) { p -= 2; grunner.push("det regner kraftig"); }
+  else if (v.nedbor > 0.4 && nedborType(v.kode) === "regn") { p -= 1; }
+
+  /* fallende trykk før uvær gir et målbart matinnrykk */
+  const t = state.wx.t.surface_pressure;
+  if (t && t[v.i] != null && t[v.i + 3] != null && t[v.i + 3] - t[v.i] < -1.5) {
+    p += 1; grunner.push("trykket faller");
+  }
+
+  const pass = solPasseringer(state.naa, HOME.lat, HOME.lon);
+  const naa = state.naa.getTime();
+  if (pass.opp && naa >= pass.opp.getTime() && naa - pass.opp.getTime() < 2 * 3600000) {
+    p += 2; grunner.push("de bryter nattefasten nå");
+  }
+  if (pass.ned && pass.ned.getTime() - naa > 0 && pass.ned.getTime() - naa < 1.5 * 3600000) {
+    p += 1; grunner.push("de spiser seg mette før natta");
+  }
+  if (sol.hoyde < -6) { p = Math.min(p, 0); }
+
+  const niv = Math.max(0, Math.min(3, p <= 0 ? 0 : p <= 2 ? 1 : p <= 4 ? 2 : 3));
+  return { niv, ord: NIVAA[niv], grunn: grunner[0] || null };
+}
+
+/* ============================================================
+   14. STELLRÅD
+   Ett om gangen. PRD §7.3.
+   ============================================================ */
+function stellraad(v) {
+  const mnd = state.naa.getMonth() + 1;
+  if (v && v.temp !== null) {
+    const t = state.wx.t.temperature_2m;
+    const neste = t.slice(v.i, v.i + 14).filter(x => x != null);
+    const kaldest = neste.length ? Math.min.apply(null, neste) : v.temp;
+    const alleUnder = neste.length > 8 && neste.every(x => x < 0);
+
+    if (kaldest < -8)
+      return "Kald natt i vente. Fyll på talg og fett før det mørkner, så de får gå mette til ro.";
+    if (v.snofall > 0.5)
+      return "Snøen legger seg. Kost av brettet, og feie en flekk bar bakke til dem som spiser nede.";
+    if (alleUnder)
+      return "Sammenhengende frost. Ikke slutt å mate nå: de har innrettet seg etter brettet ditt.";
+    if (v.temp < 0)
+      return "Under null. Vann er vanskeligere å finne enn mat når alt er frosset. Sett ut noe som ikke islegger seg.";
+    if (v.temp > 5 && v.nedbor > 0.3)
+      return "Mildt og vått. Talgboller harskner og frø mugner i slikt vær. Vask brettet og skift ut det som ligger.";
+  }
+  if (mnd >= 5 && mnd <= 8)
+    return "Hele peanøtter kan sette seg fast i halsen på fugleunger. Bruk nettingautomat nå, så må de ta småbiter.";
+  return "Rent brett er den billigste sykdomsforebyggingen som finnes. Skyll det innimellom.";
+}
+
+/* Første harde frost om høsten endrer hele flokken ved brettet.
+   Verdt å si fra om, én gang per år. */
+function forsteFrost(v) {
+  if (!v || v.temp === null) return null;
+  const mnd = state.naa.getMonth() + 1, aar = state.naa.getFullYear();
+  if (mnd < 9 || mnd > 12) return null;
+  if (v.temp > -2) return null;
+  if (state.frostAar === aar) return null;
+  state.frostAar = aar; lagre();
+  return "Første harde frosten i høst. Fra nå av endrer flokken ved brettet seg.";
+}
+
+/* ============================================================
+   15. LAGRING UT OG INN
+   ============================================================ */
+function idagStr() {
+  const d = new Date();
+  return d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0") +
+         "-" + String(d.getDate()).padStart(2, "0");
+}
+function eksporter() {
+  const data = {
+    schemaVersion: 1,
+    obs: state.obs, mat: state.mat,
+    ungfugl: state.ungfugl, frostAar: state.frostAar
+  };
+  const blob = new Blob([JSON.stringify(data, null, 1)], { type: "application/json" });
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(blob);
+  a.download = "fuglevinduet-" + idagStr() + ".json";
+  a.click();
+  URL.revokeObjectURL(a.href);
+  try { localStorage.setItem(NOKKEL_BACKUP, String(Date.now())); } catch (e) {}
+  tegnAlt();
+}
+function importer(fil) {
+  const leser = new FileReader();
+  leser.onload = () => {
+    let d;
+    try { d = JSON.parse(leser.result); }
+    catch (e) { alert("Klarte ikke å lese filen."); return; }
+    if (!d || d.schemaVersion !== 1) { alert("Ukjent filformat."); return; }
+    const inn = Array.isArray(d.obs) ? d.obs : [];
+    const slaaSammen = state.obs.length > 0 &&
+      confirm("Legg de importerte observasjonene til dem du har fra før?\n\n" +
+              "OK legger til. Avbryt erstatter alt med innholdet i filen.");
+    if (slaaSammen) {
+      const finnes = new Set(state.obs.map(o => o.art + "|" + o.tid));
+      inn.forEach(o => { if (!finnes.has(o.art + "|" + o.tid)) state.obs.push(o); });
+    } else {
+      state.obs = inn;
+      state.mat = Array.isArray(d.mat) ? d.mat : [];
+      state.ungfugl = !!d.ungfugl;
+      state.frostAar = d.frostAar || null;
+    }
+    state.obs.sort((a, b) => b.tid - a.tid);
+    lagre(); tegnAlt();
+  };
+  leser.readAsText(fil);
+}
+function backupTekst() {
+  let t = null;
+  try { t = parseInt(localStorage.getItem(NOKKEL_BACKUP) || "", 10); } catch (e) {}
+  if (!t || isNaN(t)) return "Sist sikkerhetskopi: aldri";
+  const dager = Math.floor((Date.now() - t) / 86400000);
+  if (dager <= 0) return "Sist sikkerhetskopi: i dag";
+  if (dager === 1) return "Sist sikkerhetskopi: i går";
+  return "Sist sikkerhetskopi: for " + dager + " dager siden";
+}
+
+/* ============================================================
+   16. LOGGING
+   ============================================================ */
+function loggFor(id) {
+  state.obs.unshift({ art: id, tid: Date.now() });
+  lagre(); tegnAlt();
+}
+function slettObs(tid) {
+  state.obs = state.obs.filter(o => o.tid !== tid);
+  lagre(); tegnAlt();
+}
+
+/* ============================================================
+   9. OPPSTART
+   ============================================================ */
+/* ---------- små hjelpere for HTML ---------- */
+function h(tag, attr, tekst) {
+  const n = document.createElement(tag);
+  for (const k in attr) {
+    if (k === "class") n.className = attr[k];
+    else if (k.startsWith("on")) n.addEventListener(k.slice(2), attr[k]);
+    else n.setAttribute(k, attr[k]);
+  }
+  if (tekst != null) n.textContent = tekst;
+  return n;
+}
+function klokke(d) {
+  return d.toLocaleTimeString("nb-NO", { hour: "2-digit", minute: "2-digit" });
+}
+
+/* ---------- bestemmelsespanelet ---------- */
+function tegnIdPanel() {
+  const rot = document.getElementById("id-body");
+  rot.textContent = "";
+  const mnd = state.naa.getMonth() + 1;
+
+  /* det han allerede har svart */
+  const valgte = Object.keys(state.idValg);
+  if (valgte.length || state.ungfugl) {
+    const rad = h("div", { class: "valgt-rad" });
+    valgte.forEach(k => {
+      const m = h("span", { class: "valgt-merke" }, ordFor(k, state.idValg[k]));
+      m.appendChild(h("button", {
+        type: "button", "aria-label": "Fjern " + ordFor(k, state.idValg[k]),
+        onclick: () => { delete state.idValg[k]; tegnAlt(); }
+      }, "×"));
+      rad.appendChild(m);
+    });
+    rot.appendChild(rad);
+  }
+
+  let kandidater = filtrer(ARTER, state.idValg, state.ungfugl);
+  let tomtTreff = false;
+
+  /* Aldri "ingen treff". Nybegynnere husker farger feil hele tiden,
+     så vi slipper det siste kravet og viser de nærmeste i stedet. */
+  if (!kandidater.length && valgte.length) {
+    tomtTreff = true;
+    /* Slipp det nyeste kravet først, så det nest nyeste, helt til noe
+       treffer. Å slippe bare ett holder ikke: to krav kan utelukke
+       hverandre uten at noen av dem er det siste han krysset av. */
+    const løsere = Object.assign({}, state.idValg);
+    for (let i = valgte.length - 1; i >= 0 && !kandidater.length; i--) {
+      delete løsere[valgte[i]];
+      kandidater = filtrer(ARTER, løsere, state.ungfugl);
+    }
+    if (!kandidater.length) kandidater = ARTER.slice();
+  }
+
+  const spm = nesteSporsmal(kandidater, state.idValg, state.ungfugl);
+  const ferdig = kandidater.length <= 3 || !spm;
+
+  if (tomtTreff) {
+    rot.appendChild(h("p", { class: "panel-lede" },
+      "Ingen treff helt, men disse er nære."));
+  } else if (!valgte.length) {
+    rot.appendChild(h("p", { class: "panel-lede" },
+      "Svar på det du la merke til. Hopp over det du ikke rakk å se. " +
+      "Appen sier aldri hvilken fugl det var, bare hvilke det kan ha vært."));
+  }
+
+  if (spm && !ferdig) {
+    rot.appendChild(h("div", { class: "sporsmal" }, spm.sp));
+    const brikker = h("div", { class: "chips" });
+    const verdier = new Set();
+    kandidater.forEach(a => {
+      if (spm.liste) a[spm.n].forEach(v => verdier.add(v));
+      else verdier.add(a[spm.n]);
+    });
+    [...verdier]
+      .sort((a, b) => ordFor(spm.n, a).localeCompare(ordFor(spm.n, b), "nb"))
+      .forEach(v => brikker.appendChild(h("button", {
+        class: "chip", type: "button",
+        onclick: () => { state.idValg[spm.n] = v; tegnAlt(); }
+      }, ordFor(spm.n, v))));
+    brikker.appendChild(h("button", {
+      class: "chip skip", type: "button",
+      onclick: () => { state.idHoppet.push(spm.n); tegnAlt(); }
+    }, "Vet ikke"));
+    rot.appendChild(brikker);
+  }
+
+  /* kandidatlisten */
+  const rangert = rangér(kandidater, mnd);
+  const skille = ferdig ? skillemerke(rangert.slice(0, 4)) : {};
+  const liste = h("ul", { class: "kandidater" });
+  rangert.slice(0, ferdig ? 4 : 6).forEach(a => {
+    const rad = h("li", { class: "kandidat" });
+    rad.appendChild(h("img", { src: "birds/" + a.illustrasjon, alt: "", loading: "lazy" }));
+    const midt = h("div", {});
+    midt.appendChild(h("div", { class: "kandidat-navn" }, a.navn));
+    midt.appendChild(h("div", { class: "kandidat-merke" },
+      skille[a.id] || a.kjennetegn));
+    if (state.ungfugl && a.ungfugl_avvik)
+      midt.appendChild(h("div", { class: "kandidat-merke" }, a.ungfugl_avvik));
+    /* Merknaden om årstid vises bare når listen er kortet ned. På seks
+       kandidater samtidig blir den støy, og formuleringen gjelder når
+       arten pleier å komme til brettet, ikke om den finnes i landet. */
+    if (ferdig && !a.sesong_topp.includes(mnd))
+      midt.appendChild(h("div", { class: "kandidat-flagg" },
+        "Kommer oftest til brettet i " +
+        a.sesong_topp.map(m => MND[m - 1]).slice(0, 3).join(", ") + "."));
+    rad.appendChild(midt);
+    rad.appendChild(h("button", {
+      class: "btn small primary", type: "button",
+      onclick: () => { loggFor(a.id); nullstillId(); }
+    }, "Det var den"));
+    liste.appendChild(rad);
+  });
+  rot.appendChild(liste);
+
+  const bunn = h("div", { class: "chips" });
+  bunn.appendChild(h("button", {
+    class: "chip" + (state.ungfugl ? " selected" : ""), type: "button",
+    "aria-pressed": state.ungfugl ? "true" : "false",
+    onclick: () => { state.ungfugl = !state.ungfugl; lagre(); tegnAlt(); }
+  }, "Det var en ungfugl"));
+  if (valgte.length)
+    bunn.appendChild(h("button", {
+      class: "chip skip", type: "button", onclick: () => { nullstillId(); }
+    }, "Start på nytt"));
+  rot.appendChild(bunn);
+}
+function nullstillId() { state.idValg = {}; state.idHoppet = []; tegnAlt(); }
+
+/* ---------- hagen din ---------- */
+function tegnLoggPanel(v) {
+  const rot = document.getElementById("log-body");
+  rot.textContent = "";
+
+  if (state.lagringFeilet)
+    rot.appendChild(h("div", { class: "raad" },
+      "Nettleseren nektet å lagre. Det du logger nå blir borte når du lukker fanen. Eksporter for å ta vare på det."));
+
+  /* maten */
+  const mat = h("p", { class: "panel-lede" },
+    state.mat.length ? "Du tilbyr: " + state.mat.join(", ") + "."
+                     : "Du har ikke sagt hva du tilbyr ennå.");
+  rot.appendChild(mat);
+  const matRad = h("div", { class: "chips" });
+  matRad.appendChild(h("button", {
+    class: "chip", type: "button", onclick: () => aapne("mat-modal")
+  }, "Endre maten"));
+  rot.appendChild(matRad);
+
+  /* hva han kan vente seg med det han har ute */
+  if (state.mat.length) {
+    const vente = ARTER.filter(a => !harSett(a.id) && tiltrekkes(a, state.mat));
+    if (vente.length)
+      rot.appendChild(h("p", { class: "panel-lede", style: "margin-top:.7rem" },
+        "Med det du har ute nå kan du vente deg " +
+        rangér(vente, state.naa.getMonth() + 1).slice(0, 4)
+          .map(a => a.navn.toLowerCase()).join(", ") + "."));
+  }
+
+  /* stellrådet, ett om gangen */
+  const frost = forsteFrost(v);
+  rot.appendChild(h("div", { class: "raad" }, frost || stellraad(v)));
+
+  /* tallene */
+  const arter = new Set(state.obs.map(o => o.art));
+  const stat = h("div", { class: "stat-rad" });
+  const s1 = h("div", { class: "stat" });
+  s1.appendChild(h("b", {}, String(arter.size)));
+  s1.appendChild(document.createTextNode(" av 30 arter sett"));
+  const s2 = h("div", { class: "stat" });
+  s2.appendChild(h("b", {}, String(state.obs.length)));
+  s2.appendChild(document.createTextNode(state.obs.length === 1 ? " observasjon" : " observasjoner"));
+  stat.appendChild(s1); stat.appendChild(s2);
+  rot.appendChild(stat);
+
+  /* loggen */
+  const liste = h("ul", { class: "logg-liste" });
+  state.obs.slice(0, 40).forEach(o => {
+    const a = art(o.art);
+    if (!a) return;
+    const rad = h("li", { class: "logg-rad" });
+    rad.appendChild(h("span", {}, a.navn));
+    const d = new Date(o.tid);
+    const iDag = d.toDateString() === state.naa.toDateString();
+    rad.appendChild(h("time", { datetime: d.toISOString() },
+      iDag ? "i dag " + klokke(d)
+           : d.getDate() + ". " + MND[d.getMonth()] + " " + klokke(d)));
+    rad.appendChild(h("button", {
+      class: "logg-slett", type: "button", title: "Slett",
+      "aria-label": "Slett observasjon av " + a.navn,
+      onclick: () => { if (confirm("Slette denne observasjonen av " + a.navn + "?")) slettObs(o.tid); }
+    }, "×"));
+    liste.appendChild(rad);
+  });
+  rot.appendChild(liste);
+}
+
+/* ---------- dagsrytmen ---------- */
+const RYTME_MINIMUM = 15;
+function tegnRytme() {
+  const rot = document.getElementById("rytme-body");
+  rot.textContent = "";
+  if (state.obs.length < RYTME_MINIMUM) {
+    const igjen = RYTME_MINIMUM - state.obs.length;
+    rot.appendChild(h("p", { class: "panel-lede" },
+      "Når du har logget " + igjen + (igjen === 1 ? " observasjon" : " observasjoner") +
+      " til, tegnes døgnkurven for din egen hage her. Den blir ikke lik noen andres."));
+    return;
+  }
+  const bøtter = new Array(24).fill(0);
+  state.obs.forEach(o => { bøtter[new Date(o.tid).getHours()]++; });
+  const maks = Math.max.apply(null, bøtter);
+  rot.appendChild(h("p", { class: "panel-lede" },
+    "Alle observasjonene dine fordelt på klokkeslett."));
+  const graf = h("div", { class: "rytme-graf" });
+  bøtter.forEach((n, t) => {
+    const s = h("div", {
+      class: "rytme-sokyle",
+      style: "height:" + (maks ? (n / maks) * 100 : 0) + "%",
+      title: n + (n === 1 ? " observasjon" : " observasjoner") + " klokka " + t
+    });
+    graf.appendChild(s);
+  });
+  rot.appendChild(graf);
+  const akse = h("div", { class: "rytme-akse" });
+  for (let t = 0; t < 24; t++) akse.appendChild(h("span", {}, t % 3 === 0 ? String(t) : ""));
+  rot.appendChild(akse);
+}
+
+/* ---------- været i scenen ---------- */
+function tegnVaerLag(v) {
+  const skyer = document.getElementById("clouds");
+  const precip = document.getElementById("precip");
+  const dekning = v ? v.skyer / 100 : 0.3;
+  skyer.setAttribute("opacity", (0.15 + dekning * 0.6).toFixed(2));
+
+  precip.textContent = "";
+  const type = v ? nedborType(v.kode) : "ingen";
+  if (v && v.nedbor > 0.05 && type !== "ingen") {
+    const tett = Math.min(160, 30 + v.nedbor * 60);
+    const rnd = slump(31 + Math.floor(state.naa.getMinutes()));
+    for (let i = 0; i < tett; i++) {
+      const x = rnd() * 1200, y = rnd() * 620;
+      if (type === "sno" || type === "sludd") {
+        precip.appendChild(el("circle", { cx: x.toFixed(1), cy: y.toFixed(1),
+          r: (1.4 + rnd() * 1.6).toFixed(1), fill: "#ffffff", opacity: 0.75 }));
+      } else {
+        precip.appendChild(el("line", { x1: x.toFixed(1), y1: y.toFixed(1),
+          x2: (x - 3).toFixed(1), y2: (y + 13).toFixed(1),
+          stroke: "#cfe0ee", "stroke-width": 1.4, opacity: 0.6 }));
+      }
+    }
+  }
+
+  /* snø som ligger */
+  const dybde = v ? Math.min(1, (v.snodybde || 0) / 0.12) : 0;
+  ["snowGround", "snowFence", "snowSpruce", "snowBranch", "snowFeeder"]
+    .forEach(id => {
+      const n = document.getElementById(id);
+      if (n) n.setAttribute("opacity", dybde.toFixed(2));
+    });
+}
+
+/* ---------- fôret i selve brettet ---------- */
+function tegnFor() {
+  const fyll = document.getElementById("feedFill");
+  const ekstra = document.getElementById("feedExtras");
+  fyll.textContent = ""; ekstra.textContent = "";
+  const farger = {
+    "solsikkefrø": "#4a4034", "frøblanding": "#b39a68", "nigerfrø": "#3b352c",
+    "nøtter": "#c09a63", "melorm": "#b98a5e", "eplebiter": "#c4d38a",
+    "talgboller": "#e0d3a8", "vann": "#8fb4cc"
+  };
+  const iRøret = state.mat.filter(m => ["solsikkefrø","frøblanding","nigerfrø","nøtter"].includes(m));
+  if (iRøret.length) {
+    const h0 = 40;
+    iRøret.forEach((m, i) => {
+      fyll.appendChild(el("rect", {
+        x: 614, y: 320 - h0 + i * (h0 / iRøret.length),
+        width: 52, height: h0 / iRøret.length,
+        fill: farger[m] || "#8a7a5a", opacity: 0.9
+      }));
+    });
+  }
+  /* talgboller henger i et nett under taket */
+  if (state.mat.includes("talgboller")) {
+    ekstra.appendChild(el("line", { x1: 700, y1: 256, x2: 700, y2: 276,
+      stroke: "#6f6250", "stroke-width": 2 }));
+    ekstra.appendChild(el("circle", { cx: 700, cy: 288, r: 12, fill: "#e0d3a8" }));
+    ekstra.appendChild(el("circle", { cx: 700, cy: 288, r: 12, fill: "none",
+      stroke: "#8a7a5a", "stroke-width": 1.4, "stroke-dasharray": "3 3" }));
+  }
+  if (state.mat.includes("eplebiter")) {
+    ekstra.appendChild(el("path", { d: "M572 334 l0 -7", stroke: "#6f5940", "stroke-width": 2 }));
+    ekstra.appendChild(el("circle", { cx: 572, cy: 328, r: 8, fill: "#b6452f" }));
+  }
+  if (state.mat.includes("vann")) {
+    ekstra.appendChild(el("ellipse", { cx: 726, cy: 566, rx: 34, ry: 11, fill: "#7c8a6a" }));
+    ekstra.appendChild(el("ellipse", { cx: 726, cy: 564, rx: 28, ry: 8, fill: "#8fb4cc" }));
+  }
+  if (state.mat.includes("melorm")) {
+    ekstra.appendChild(el("rect", { x: 596, y: 330, width: 22, height: 7, rx: 3, fill: "#b98a5e" }));
+  }
+}
+
+/* ---------- matdialogen ---------- */
+function tegnMatValg() {
+  const rot = document.getElementById("mat-valg");
+  rot.textContent = "";
+  MATVALG.forEach(m => {
+    rot.appendChild(h("button", {
+      class: "chip" + (state.mat.includes(m) ? " selected" : ""),
+      type: "button", "aria-pressed": state.mat.includes(m) ? "true" : "false",
+      onclick: () => {
+        state.mat = state.mat.includes(m) ? state.mat.filter(x => x !== m)
+                                          : state.mat.concat([m]);
+        lagre(); tegnAlt(); tegnMatValg();
+      }
+    }, m.charAt(0).toUpperCase() + m.slice(1)));
+  });
+  const følge = document.getElementById("mat-folge");
+  følge.textContent = "";
+  const forslag = matforslag(state.mat);
+  if (forslag) følge.appendChild(h("div", { class: "raad" }, forslag));
+}
+
+/* ---------- er dette normalt ---------- */
+const NORMALT = [
+  ["Skallete kjøttmeis",
+   "I juli og august myter mange kjøttmeis hodefjærene samtidig, og går rundt som små gribber i noen uker. Det ser sykt ut. Det er det ikke."],
+  ["Loslitte voksne på ettersommeren",
+   "Etter en hel hekkesesong er fjærdrakten utslitt, og den skiftes ut. En fugl som ser rufsete ut i august er en fugl som har gjort jobben sin."],
+  ["Ungfugler som ikke ligner på noe i boka",
+   "Om lag fire av ti fugler ved brettet er ungfugler på ettersommeren. Unge rødstruper har ikke rødt bryst i det hele tatt. Skru på Det var en ungfugl i bestemmelsen."],
+  ["Spurvehauk som tar en fugl ved brettet",
+   "Et fuglebrett som samler småfugl, samler også det som lever av småfugl. Det er en hage som virker, ikke en hage som har feilet."],
+  ["Helt tomt i en dag eller to",
+   "Som regel har en spurvehauk vært innom nabolaget, eller så har naturen selv fått et godt matår akkurat nå. De kommer tilbake."],
+  ["Krangling og jaging ved brettet",
+   "Rangorden. Meiser tar ett frø om gangen og flyr vekk med det nettopp for å slippe unna bråket."]
+];
+function tegnNormalt() {
+  const rot = document.getElementById("normalt-liste");
+  if (rot.childElementCount) return;
+  NORMALT.forEach(([t, b]) => {
+    rot.appendChild(h("h3", {}, t));
+    rot.appendChild(h("p", {}, b));
+  });
+}
+
+/* ---------- dialoghåndtering: lukkes på tre måter ---------- */
+let sisteUtløser = null;
+function aapne(id) {
+  sisteUtløser = document.activeElement;
+  const m = document.getElementById(id);
+  m.hidden = false;
+  const f = m.querySelector("button, [href], input");
+  if (f) f.focus();
+}
+function lukk(m) {
+  m.hidden = true;
+  if (sisteUtløser && sisteUtløser.focus) sisteUtløser.focus();
+}
+function koblDialoger() {
+  document.querySelectorAll(".modal-backdrop").forEach(m => {
+    m.addEventListener("click", e => { if (e.target === m) lukk(m); });
+    m.querySelectorAll(".modal-close").forEach(b =>
+      b.addEventListener("click", () => lukk(m)));
+    /* hold tabbing inne i dialogen mens den er åpen */
+    m.addEventListener("keydown", e => {
+      if (e.key !== "Tab") return;
+      const f = [...m.querySelectorAll("button, [href], input, select, textarea")]
+        .filter(n => !n.disabled && n.offsetParent !== null);
+      if (!f.length) return;
+      const forste = f[0], siste = f[f.length - 1];
+      if (e.shiftKey && document.activeElement === forste) { e.preventDefault(); siste.focus(); }
+      else if (!e.shiftKey && document.activeElement === siste) { e.preventDefault(); forste.focus(); }
+    });
+  });
+  document.addEventListener("keydown", e => {
+    if (e.key === "Escape")
+      document.querySelectorAll(".modal-backdrop:not([hidden])").forEach(lukk);
+  });
+}
+
+function tegnAlt() {
+  const s = tegnLys();
+  tegnArstid();
+  tegnFor();
+  const v = vaerNaa();
+  tegnVaerLag(v);
+  tegnFugler();
+  tegnIdPanel();
+  tegnLoggPanel(v);
+  tegnRytme();
+
+  document.getElementById("season-line").textContent = SESONGLINJE[state.naa.getMonth()];
+  document.getElementById("backup-status").textContent = backupTekst();
+
+  const p = solPasseringer(state.naa, HOME.lat, HOME.lon);
+  const kl = d => d ? klokke(d) : "ikke i dag";
+  const biter = [];
+  const akt = aktivitet(v, s);
+  if (akt) biter.push("Ved brettet nå: <b>" + akt.ord + "</b>" +
+                      (akt.grunn ? ", " + akt.grunn : "") + ".");
+  if (v && v.temp !== null)
+    biter.push(Math.round(v.temp) + " grader, vind " + Math.round(v.vind) + " meter i sekundet.");
+  else if (state.wxStatus === "feil")
+    biter.push("Fikk ikke tak i været. Alt annet virker som før.");
+  biter.push("Sol opp <b>" + kl(p.opp) + "</b>, ned <b>" + kl(p.ned) + "</b>.");
+  document.getElementById("status-meta").innerHTML = biter.join(" ");
+
+  const kreditt = document.getElementById("wx-credit");
+  kreditt.textContent = state.wx
+    ? "Værdata fra Open-Meteo (CC BY 4.0), bygget på nasjonale varslingstjenester som MET Norge. Hentet " +
+      klokke(new Date(state.wx.hentet)) + " for " + HOME.navn + "."
+    : "Værdata fra Open-Meteo (CC BY 4.0), bygget på nasjonale varslingstjenester som MET Norge.";
+}
+
+/* Første besøk skal ikke være en tom hage (PRD §10.4). Disse tre er
+   fugler han allerede ser, så scenen har liv med en gang og
+   silhuettene har noe å stå i kontrast til. */
+const FORSTEGANGS_ARTER = ["stillits", "skjaere", "kjottmeis"];
+
+function saaFrø() {
+  const naa = Date.now();
+  state.obs = FORSTEGANGS_ARTER.map((id, i) => ({
+    art: id,
+    tid: naa - (i + 1) * 3600000
+  }));
+  state.mat = ["solsikkefrø", "talgboller"];
+  lagre();
+}
+
+function kobl() {
+  koblDialoger();
+  tegnNormalt();
+
+  document.getElementById("about-btn").addEventListener("click", () => aapne("about-modal"));
+  document.getElementById("normalt-btn").addEventListener("click", () => aapne("normalt-modal"));
+  document.getElementById("gave-btn").addEventListener("click", () => aapne("gave-modal"));
+  document.getElementById("export-btn").addEventListener("click", eksporter);
+
+  const fil = document.getElementById("import-file");
+  document.getElementById("import-btn").addEventListener("click", () => fil.click());
+  fil.addEventListener("change", () => {
+    if (fil.files && fil.files[0]) importer(fil.files[0]);
+    fil.value = "";
+  });
+
+  /* brettet åpner matdialogen */
+  const brett = document.getElementById("feeder");
+  const aapneMat = () => { tegnMatValg(); aapne("mat-modal"); };
+  brett.addEventListener("click", aapneMat);
+  brett.addEventListener("keydown", e => {
+    if (e.key === "Enter" || e.key === " ") { e.preventDefault(); aapneMat(); }
+  });
+
+  /* å klikke en fugl i scenen logger den. Å klikke en silhuett er
+     øyeblikket der den blir ekte, så det skal være ett klikk. */
+  const lag = document.getElementById("birdLayer");
+  const trykk = e => {
+    const g = e.target.closest("g[data-art]");
+    if (!g) return;
+    const a = art(g.dataset.art);
+    if (!a) return;
+    if (g.dataset.tilstand === "silhuett") {
+      if (!confirm("Har du sett " + a.navn.toLowerCase() + " i hagen?")) return;
+    }
+    loggFor(a.id);
+  };
+  lag.addEventListener("click", trykk);
+  lag.addEventListener("keydown", e => {
+    if (e.key === "Enter" || e.key === " ") { e.preventDefault(); trykk(e); }
+  });
+}
+
+function start() {
+  byggScene();
+  if (!last()) saaFrø();
+  kobl();
+
+  state.wx = lastWx();
+  state.wxStatus = state.wx ? "ok" : "idle";
+  tegnAlt();
+  hentVaer(false);          /* gjør ingenting hvis bufferet er under en time gammelt */
+
+  setInterval(() => { state.naa = new Date(); tegnAlt(); }, 60000);
+  setInterval(() => hentVaer(false), 15 * 60000);
+}
+start();
+</script>
+</body>
+</html>

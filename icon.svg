@@ -1,0 +1,27 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="180" height="180" viewBox="0 0 180 180">
+  <defs>
+    <linearGradient id="bg" gradientUnits="userSpaceOnUse" x1="0" y1="0" x2="180" y2="180">
+      <stop offset="0" stop-color="#72916B"/>
+      <stop offset="1" stop-color="#56704E"/>
+    </linearGradient>
+  </defs>
+  <rect width="180" height="180" rx="40" fill="url(#bg)"/>
+
+  <!-- en sittende småfugl i profil -->
+  <g fill="#F8F7F1">
+    <!-- kropp -->
+    <ellipse cx="90" cy="88" rx="29" ry="22" transform="rotate(-20 90 88)"/>
+    <!-- hode -->
+    <circle cx="116" cy="63" r="17"/>
+    <!-- nebb -->
+    <path d="M131 58 L152 65 L131 72 Z"/>
+    <!-- stjert, stanser over greina -->
+    <path d="M69 101 C 58 111, 48 118, 39 123 C 51 122, 63 116, 75 108 Z"/>
+  </g>
+  <!-- bein -->
+  <path d="M95 109 V127 M109 107 V127" stroke="#F8F7F1" stroke-width="7" stroke-linecap="round"/>
+  <!-- greina den sitter på -->
+  <path d="M42 133 H143" stroke="#F8F7F1" stroke-width="8" stroke-linecap="round"/>
+  <!-- øyet, kuttet ut i bakgrunnsfargen -->
+  <circle cx="122" cy="59" r="4.6" fill="url(#bg)"/>
+</svg>
