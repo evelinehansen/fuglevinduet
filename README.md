@@ -15,10 +15,18 @@ window. The interface is in Norwegian throughout.
 - **Birds you log appear in the scene**, each at its own perch. Species
   you have not seen yet stand as faint outlines where they would sit.
   Clicking a bird logs it.
-- **An identification key.** You answer what you noticed, and the app
-  asks next about whatever best separates the remaining candidates. It
-  never asserts which bird you saw. It shows which ones it could have
-  been and what tells them apart. "Vet ikke" is always a valid answer.
+- **An identification key**, folded away until you open it. It starts
+  with colour — which colours you saw at all, anywhere on the bird, as
+  many as you like — and then asks about whatever best separates the
+  remaining candidates. It never asserts which bird you saw. It shows
+  which ones it could have been and what tells them apart. "Vet ikke" is
+  always a valid answer.
+- **Stamgjester**, the three species you have seen most often, with one
+  button each for another visit. The common case — the same bird as
+  yesterday — does not send you back through the key.
+- **A window for each species**, reached from the candidate list, from
+  the regulars and from any row in the log. It holds the field marks and
+  every time you have seen that species, in the same place.
 - **Juvenile plumage.** In late summer a large share of the birds at a
   feeder are juveniles that match nothing in any book. Switching on "Det
   var en ungfugl" stops head and breast colour from excluding species.
@@ -62,7 +70,11 @@ The app is a single HTML file, so the species data also lives inside
 
     python3 tools/embed-arter.py
 
-That writes the data back into `index.html`.
+That writes the data back into `index.html`. It only rewrites the JSON
+block, so the tables that live in the code — image measurements, scene
+placement and the colour lists behind the first question — are left
+alone. Those are keyed by species id in `index.html`; a new species needs
+an entry in each.
 
 ## Credit
 

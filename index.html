@@ -127,6 +127,23 @@ body {
 .panel > .section-h { margin-bottom: 0.55rem; }
 .panel-lede { color: var(--ink-soft); font-size: 0.9rem; max-width: var(--measure); }
 
+/* venstre spalte: stamgjestene over bestemmelsen */
+.col { display: grid; gap: 1.1rem; align-content: start; }
+
+/* ---------- sammenleggbart panel ---------- */
+.panel-head {
+  font: inherit; background: none; border: 0; padding: 0; cursor: pointer;
+  width: 100%; min-height: 44px; text-align: left;
+  display: flex; align-items: center; justify-content: space-between; gap: 0.6rem;
+}
+.panel-head .section-h { margin: 0; }
+.panel-head-hint { color: var(--ink-soft); font-size: 0.85rem; font-weight: 600; }
+.chev {
+  color: var(--ink-faint); font-size: 0.7rem; line-height: 1;
+  transition: transform 0.2s ease;
+}
+.panel-head[aria-expanded="true"] .chev { transform: rotate(180deg); }
+
 /* ---------- brikker og valg ---------- */
 .chips { display: flex; flex-wrap: wrap; gap: 0.45rem; margin-top: 0.7rem; }
 .chip {
@@ -139,6 +156,13 @@ body {
 .chip:hover { border-color: var(--ink-faint); }
 .chip.selected { background: var(--sage-tint); border-color: var(--sage); color: var(--sage-deep); }
 .chip.skip { color: var(--ink-soft); }
+
+/* fargebrikkene har prøven på seg, så ordet ikke er det eneste å gå etter */
+.farge-prikk {
+  width: 0.8rem; height: 0.8rem; border-radius: 50%;
+  border: 1px solid rgba(38, 42, 33, 0.25);
+  display: inline-block; margin-right: 0.45rem; vertical-align: -0.1em;
+}
 
 .sporsmal { font-family: var(--serif); font-weight: 600; font-size: 1.1rem; margin-top: 0.2rem; }
 
@@ -157,15 +181,71 @@ body {
 /* ---------- kandidatliste ---------- */
 .kandidater { list-style: none; margin-top: 1rem; display: grid; gap: 0.5rem; }
 .kandidat {
-  display: grid; grid-template-columns: 56px minmax(0,1fr) auto;
+  display: grid; grid-template-columns: 104px minmax(0,1fr) auto;
   gap: 0.8rem; align-items: center;
   border: 1px solid var(--line); border-radius: 12px; padding: 0.55rem 0.7rem;
   background: var(--bg);
 }
-.kandidat img { width: 56px; height: 56px; object-fit: contain; }
-.kandidat-navn { font-family: var(--serif); font-weight: 600; font-size: 1rem; }
+@media (max-width: 560px) {
+  .kandidat { grid-template-columns: 84px minmax(0,1fr); }
+  .kandidat-knapper { grid-column: 1 / -1; grid-auto-flow: column; }
+}
+.kandidat-bilde {
+  border: 0; background: none; padding: 0; cursor: pointer; display: block;
+}
+.kandidat-bilde img { width: 104px; height: 104px; object-fit: contain; display: block; }
+@media (max-width: 560px) { .kandidat-bilde img { width: 84px; height: 84px; } }
+.kandidat-navn {
+  font-family: var(--serif); font-weight: 600; font-size: 1.05rem;
+  border: 0; background: none; padding: 0; cursor: pointer; color: var(--ink);
+  text-align: left; text-decoration: underline; text-decoration-color: var(--line);
+  text-underline-offset: 3px;
+}
+.kandidat-navn:hover { text-decoration-color: var(--sage); }
 .kandidat-merke { font-size: 0.84rem; color: var(--ink-soft); }
 .kandidat-flagg { font-size: 0.78rem; color: var(--clay-deep); }
+.kandidat-knapper { display: grid; gap: 0.35rem; }
+
+/* ---------- stamgjestene ---------- */
+.stamgjester {
+  list-style: none; display: grid; gap: 0.7rem;
+  grid-template-columns: repeat(3, minmax(0, 1fr)); margin-top: 0.7rem;
+}
+.stam-kort {
+  display: grid; justify-items: center; gap: 0.25rem; text-align: center;
+  border: 1px solid var(--line); border-radius: 12px;
+  padding: 0.7rem 0.5rem 0.8rem; background: var(--bg);
+}
+.stam-bilde { border: 0; background: none; padding: 0; cursor: pointer; width: 100%; }
+.stam-bilde img {
+  width: 100%; max-width: 132px; aspect-ratio: 1 / 1;
+  object-fit: contain; display: block; margin-inline: auto;
+}
+.stam-navn { font-family: var(--serif); font-weight: 600; font-size: 1rem; }
+.stam-tall { font-size: 0.78rem; color: var(--ink-soft); }
+.stam-kort .btn { margin-top: 0.35rem; }
+@media (max-width: 420px) {
+  .stamgjester { grid-template-columns: minmax(0, 1fr); }
+  .stam-kort { grid-template-columns: 96px minmax(0,1fr); justify-items: start; text-align: left; }
+  .stam-kort .stam-bilde { grid-row: span 3; }
+}
+
+/* ---------- artsvinduet ---------- */
+.art-topp { display: flex; gap: 1rem; align-items: center; margin-bottom: 0.8rem; }
+.art-topp img { width: 132px; height: 132px; object-fit: contain; flex: none; }
+.art-kjennetegn { font-family: var(--serif); font-size: 1.02rem; color: var(--ink); }
+.fakta {
+  display: grid; grid-template-columns: auto minmax(0, 1fr);
+  gap: 0.3rem 0.9rem; font-size: 0.88rem; margin: 0.2rem 0 0.4rem;
+}
+.fakta dt { color: var(--ink-faint); font-weight: 600; }
+.fakta dd { color: var(--ink); }
+.obs-liste { list-style: none; display: grid; gap: 0.2rem; max-height: 200px; overflow-y: auto; }
+.obs-rad {
+  display: flex; gap: 0.6rem; justify-content: space-between;
+  font-size: 0.86rem; padding: 0.25rem 0; border-bottom: 1px solid var(--line);
+}
+.obs-rad time { color: var(--ink-faint); }
 
 /* ---------- loggen ---------- */
 .logg-liste { list-style: none; display: grid; gap: 0.3rem; margin-top: 0.6rem;
@@ -173,6 +253,12 @@ body {
 .logg-rad { display: flex; align-items: center; gap: 0.6rem; font-size: 0.88rem;
             padding: 0.3rem 0; border-bottom: 1px solid var(--line); }
 .logg-rad time { color: var(--ink-faint); font-size: 0.8rem; margin-left: auto; }
+.logg-navn {
+  font: inherit; border: 0; background: none; padding: 0; cursor: pointer;
+  color: var(--ink); text-align: left;
+  text-decoration: underline; text-decoration-color: var(--line); text-underline-offset: 3px;
+}
+.logg-navn:hover { text-decoration-color: var(--sage); }
 .logg-slett { font: inherit; border: 0; background: none; cursor: pointer;
               color: var(--clay-deep); font-size: 0.9rem; padding: 0 0.3rem; }
 
@@ -191,6 +277,9 @@ body {
 
 /* ---------- dagsrytme ---------- */
 .rytme { margin-top: 1.1rem; padding: 1.1rem 1.2rem 1.2rem; }
+/* Panelet er fullbredt, så lesebredden på 62ch brøt teksten midt i en
+   setning selv om det var plass igjen i boksen. Her får den bruke boksen. */
+.rytme .panel-lede { max-width: none; }
 .rytme-graf { display: grid; grid-template-columns: repeat(24, 1fr); gap: 2px;
               align-items: end; height: 120px; margin-top: 0.8rem; }
 .rytme-sokyle { background: var(--sage); border-radius: 3px 3px 0 0; min-height: 2px; }
@@ -382,10 +471,21 @@ footer.credits a { color: var(--ink-soft); }
   </div>
 
   <div class="panels">
-    <section class="card panel" id="id-panel">
-      <div class="section-h">Hvilken fugl var det?</div>
-      <div id="id-body"></div>
-    </section>
+    <div class="col">
+      <section class="card panel" id="stam-panel">
+        <div class="section-h">Stamgjester</div>
+        <div id="stam-body"></div>
+      </section>
+      <section class="card panel" id="id-panel">
+        <button id="id-head" class="panel-head" type="button"
+                aria-expanded="false" aria-controls="id-body">
+          <span class="section-h">Hvilken fugl var det?</span>
+          <span class="panel-head-hint"><span id="id-head-hint">Registrer en ny fugl</span>
+            <span class="chev">▾</span></span>
+        </button>
+        <div id="id-body" hidden></div>
+      </section>
+    </div>
     <section class="card panel" id="log-panel">
       <div class="section-h">Hagen din</div>
       <div id="log-body"></div>
@@ -430,6 +530,13 @@ footer.credits a { color: var(--ink-soft); }
     <p>Det du har ute avgjør hvem som kommer. Huk av det som står i hagen.</p>
     <div id="mat-valg" class="chips"></div>
     <div id="mat-folge"></div>
+    <button class="btn modal-close">Lukk</button>
+  </div>
+</div>
+
+<div id="art-modal" class="modal-backdrop" hidden>
+  <div class="modal" role="dialog" aria-modal="true" aria-labelledby="art-tittel" tabindex="-1">
+    <div id="art-body"></div>
     <button class="btn modal-close">Lukk</button>
   </div>
 </div>
@@ -1982,6 +2089,60 @@ const HOME = { navn: "Tjøme", lat: 59.1100, lon: 10.4000, tz: "Europe/Oslo" };
    ============================================================ */
 const ARTER = JSON.parse(document.getElementById("arter-data").textContent);
 
+/* ------------------------------------------------------------
+   FARGER
+   Det første spørsmålet i nøkkelen, og det eneste som ikke bryr
+   seg om hvor på fuglen fargen satt. Ligger her og ikke i
+   arter.json fordi det ikke er en felt-egenskap som de andre,
+   men et grovt førsteinntrykk: hva du så av farge i det hele tatt.
+
+   Verdiene er ASCII, som resten av nøklene. Listene er raust satt:
+   et fargevalg utelukker arter, så en farge som mangler her ville
+   gjemme den riktige fuglen. Bare farger en nybegynner faktisk
+   rekker å se er med — ikke glans og nyanser i felt.
+   ------------------------------------------------------------ */
+const FARGER = {
+  kjottmeis:   ["gul", "svart", "hvit", "gronn"],
+  blaameis:    ["blaa", "gul", "hvit", "svart", "gronn"],
+  granmeis:    ["svart", "hvit", "brun", "graa"],
+  svartmeis:   ["svart", "hvit", "graa", "brun"],
+  toppmeis:    ["svart", "hvit", "brun", "graa"],
+  spettmeis:   ["blaa", "graa", "hvit", "svart", "brun"],
+  trekryper:   ["brun", "hvit", "graa"],
+  stillits:    ["rod", "gul", "svart", "hvit", "brun"],
+  dompap:      ["rod", "svart", "hvit", "graa", "brun"],
+  gronnfink:   ["gronn", "gul", "graa", "brun"],
+  gronnsisik:  ["gronn", "gul", "svart", "brun"],
+  grasisik:    ["rod", "brun", "graa", "hvit", "svart"],
+  bokfink:     ["rod", "blaa", "brun", "hvit", "graa"],
+  bjorkefink:  ["svart", "brun", "hvit"],
+  gulspurv:    ["gul", "brun", "hvit"],
+  graspurv:    ["graa", "brun", "svart", "hvit"],
+  pilfink:     ["brun", "svart", "hvit", "graa"],
+  rodstrupe:   ["rod", "brun", "hvit", "graa"],
+  gjerdesmett: ["brun", "graa"],
+  svarttrost:  ["svart", "gul", "brun"],
+  gratrost:    ["graa", "brun", "svart", "hvit"],
+  staer:       ["svart", "hvit", "gronn", "gul"],
+  sidensvans:  ["brun", "gul", "rod", "svart", "hvit"],
+  kjernebiter: ["brun", "svart", "hvit", "graa"],
+  flaggspett:  ["svart", "hvit", "rod"],
+  notteskrike: ["brun", "blaa", "svart", "hvit"],
+  skjaere:     ["svart", "hvit", "blaa"],
+  krake:       ["svart", "graa"],
+  ringdue:     ["graa", "hvit", "brun"],
+  spurvehauk:  ["graa", "brun", "hvit"]
+};
+/* Fargene blir en helt vanlig listeegenskap på artsposten. */
+ARTER.forEach(a => { a.farger = FARGER[a.id] || []; });
+
+/* Rekkefølgen brikkene står i, og prøven som vises på hver av dem. */
+const FARGE_REKKE = ["rod", "gul", "blaa", "gronn", "hvit", "brun", "graa", "svart"];
+const FARGE_PROVE = {
+  rod: "#b8412c", gul: "#e8c14a", blaa: "#4f77aa", gronn: "#6d8f4a",
+  hvit: "#fbfbf7", brun: "#8b6a48", graa: "#9aa0a3", svart: "#2b2e28"
+};
+
 /* ============================================================
    2. BILDEMÅL
    Målt fra selve PNG-ene, ikke gjettet.
@@ -2243,6 +2404,7 @@ const state = {
   frostAar: null,     /* året vi sist meldte fra om første frost */
   idValg: {},         /* egenskapene han har krysset av i nøkkelen */
   idHoppet: [],       /* egenskaper han svarte "vet ikke" på */
+  idApen: false,      /* nøkkelen ligger sammenlagt til han åpner den */
   lagringFeilet: false,
   wx: null,
   wxStatus: "idle",
@@ -2825,7 +2987,12 @@ const ORD = {
   sted: {
     mateplass: "På fuglebrettet", bakken: "På bakken", trestamme: "På en trestamme",
     gjerde: "På gjerdet", trekrone: "Oppe i et tre", i_lufta: "I lufta"
-  }
+  },
+  farger: {
+    rod: "Rød", gul: "Gul", blaa: "Blå", gronn: "Grønn",
+    hvit: "Hvit", brun: "Brun", graa: "Grå", svart: "Svart"
+  },
+  sjeldenhet: { vanlig: "Vanlig", uvanlig: "Uvanlig", sjelden: "Sjelden" }
 };
 function ordFor(attr, verdi) {
   return (ORD[attr] && ORD[attr][verdi]) || (verdi.charAt(0).toUpperCase() + verdi.slice(1));
@@ -2848,10 +3015,13 @@ const ER_LISTE = Object.fromEntries(EGENSKAPER.map(e => [e.n, e.liste]));
 
 /* Ungfugldrakt: unge rødstruper har ikke rød strupe, unge kjøttmeis er
    vaskede ut. Da kan farge på bryst og hode ikke få lov til å utelukke
-   noen. De filtrerer ikke, men teller fortsatt ved rangering. */
-const MYK_NAR_UNGFUGL = ["bryst", "hode"];
+   noen — og av samme grunn heller ikke fargespørsmålet. */
+const MYK_NAR_UNGFUGL = ["bryst", "hode", "farger"];
 
+/* Fargespørsmålet er det ene som tar flere svar samtidig: verdien i
+   valg-objektet er en liste, og arten må ha alle fargene du krysset av. */
 function passer(a, attr, verdi) {
+  if (attr === "farger") return verdi.every(f => a.farger.includes(f));
   return ER_LISTE[attr] ? a[attr].includes(verdi) : a[attr] === verdi;
 }
 
@@ -3224,16 +3394,76 @@ function h(tag, attr, tekst) {
 function klokke(d) {
   return d.toLocaleTimeString("nb-NO", { hour: "2-digit", minute: "2-digit" });
 }
+/* Året står bare der når det ikke er inneværende år. */
+function dato(d) {
+  const t = d.getDate() + ". " + MND[d.getMonth()];
+  return d.getFullYear() === state.naa.getFullYear() ? t : t + " " + d.getFullYear();
+}
+function datoTid(d) { return dato(d) + " kl. " + klokke(d); }
+function naerTid(d) {
+  return d.toDateString() === state.naa.toDateString() ? "i dag " + klokke(d) : dato(d);
+}
 
 /* ---------- bestemmelsespanelet ---------- */
+/* Panelet ligger sammenlagt til han faktisk skal føre opp noe. Hagen og
+   stamgjestene er det man ser på til vanlig; nøkkelen er noe man åpner. */
+function settIdApen(apen) {
+  state.idApen = apen;
+  document.getElementById("id-body").hidden = !apen;
+  document.getElementById("id-head").setAttribute("aria-expanded", apen ? "true" : "false");
+  document.getElementById("id-head-hint").textContent =
+    apen ? "Lukk" : "Registrer en ny fugl";
+}
+
+/* Fargespørsmålet. Står alltid først, tar flere svar, og bryr seg ikke
+   om hvor på fuglen fargen satt. */
+function tegnFargeRad(rot) {
+  const valgt = state.idValg.farger || [];
+  rot.appendChild(h("div", { class: "sporsmal" }, "Hvilke farger hadde den?"));
+  rot.appendChild(h("p", { class: "panel-lede" },
+    "Uansett hvor på fuglen du så dem. Velg gjerne flere."));
+  const brikker = h("div", { class: "chips" });
+  FARGE_REKKE.forEach(f => {
+    const av = valgt.includes(f);
+    const b = h("button", {
+      class: "chip" + (av ? " selected" : ""), type: "button",
+      "aria-pressed": av ? "true" : "false",
+      onclick: () => {
+        const nye = (state.idValg.farger || []).filter(x => x !== f);
+        if (!av) nye.push(f);
+        if (nye.length) state.idValg.farger = nye; else delete state.idValg.farger;
+        tegnAlt();
+      }
+    });
+    b.appendChild(h("span", { class: "farge-prikk",
+                              style: "background:" + FARGE_PROVE[f] }));
+    b.appendChild(document.createTextNode(ordFor("farger", f)));
+    brikker.appendChild(b);
+  });
+  rot.appendChild(brikker);
+  if (state.ungfugl && valgt.length)
+    rot.appendChild(h("p", { class: "panel-lede", style: "margin-top:.5rem" },
+      "Ungfugler har ofte helt andre farger enn de voksne, så fargene " +
+      "avgrenser ikke listen så lenge det står ungfugl."));
+}
+
 function tegnIdPanel() {
   const rot = document.getElementById("id-body");
   rot.textContent = "";
   const mnd = state.naa.getMonth() + 1;
 
+  /* fargene viser valget sitt selv i brikkeraden, så de holdes utenfor her */
+  const valgte = Object.keys(state.idValg).filter(k => k !== "farger");
+  const fargeValg = state.idValg.farger || [];
+
+  if (!valgte.length && !fargeValg.length)
+    rot.appendChild(h("p", { class: "panel-lede" },
+      "Begynn med fargene, og svar ellers på det du la merke til. Hopp over " +
+      "det du ikke rakk å se. Appen sier aldri hvilken fugl det var, bare " +
+      "hvilke det kan ha vært."));
+
   /* det han allerede har svart */
-  const valgte = Object.keys(state.idValg);
-  if (valgte.length || state.ungfugl) {
+  if (valgte.length) {
     const rad = h("div", { class: "valgt-rad" });
     valgte.forEach(k => {
       const m = h("span", { class: "valgt-merke" }, ordFor(k, state.idValg[k]));
@@ -3246,19 +3476,22 @@ function tegnIdPanel() {
     rot.appendChild(rad);
   }
 
+  tegnFargeRad(rot);
+
   let kandidater = filtrer(ARTER, state.idValg, state.ungfugl);
   let tomtTreff = false;
 
   /* Aldri "ingen treff". Nybegynnere husker farger feil hele tiden,
      så vi slipper det siste kravet og viser de nærmeste i stedet. */
-  if (!kandidater.length && valgte.length) {
+  const alleKrav = Object.keys(state.idValg);
+  if (!kandidater.length && alleKrav.length) {
     tomtTreff = true;
     /* Slipp det nyeste kravet først, så det nest nyeste, helt til noe
        treffer. Å slippe bare ett holder ikke: to krav kan utelukke
        hverandre uten at noen av dem er det siste han krysset av. */
     const løsere = Object.assign({}, state.idValg);
-    for (let i = valgte.length - 1; i >= 0 && !kandidater.length; i--) {
-      delete løsere[valgte[i]];
+    for (let i = alleKrav.length - 1; i >= 0 && !kandidater.length; i--) {
+      delete løsere[alleKrav[i]];
       kandidater = filtrer(ARTER, løsere, state.ungfugl);
     }
     if (!kandidater.length) kandidater = ARTER.slice();
@@ -3267,14 +3500,9 @@ function tegnIdPanel() {
   const spm = nesteSporsmal(kandidater, state.idValg, state.ungfugl);
   const ferdig = kandidater.length <= 3 || !spm;
 
-  if (tomtTreff) {
-    rot.appendChild(h("p", { class: "panel-lede" },
-      "Ingen treff helt, men disse er nære."));
-  } else if (!valgte.length) {
-    rot.appendChild(h("p", { class: "panel-lede" },
-      "Svar på det du la merke til. Hopp over det du ikke rakk å se. " +
-      "Appen sier aldri hvilken fugl det var, bare hvilke det kan ha vært."));
-  }
+  if (tomtTreff)
+    rot.appendChild(h("p", { class: "panel-lede", style: "margin-top:.9rem" },
+      "Ingen treff på alt samtidig, men disse er nære."));
 
   if (spm && !ferdig) {
     rot.appendChild(h("div", { class: "sporsmal" }, spm.sp));
@@ -3303,9 +3531,16 @@ function tegnIdPanel() {
   const liste = h("ul", { class: "kandidater" });
   rangert.slice(0, ferdig ? 4 : 6).forEach(a => {
     const rad = h("li", { class: "kandidat" });
-    rad.appendChild(h("img", { src: "birds/" + a.illustrasjon, alt: "", loading: "lazy" }));
+    const bilde = h("button", {
+      class: "kandidat-bilde", type: "button",
+      "aria-label": "Les om " + a.navn, onclick: () => visArt(a.id)
+    });
+    bilde.appendChild(h("img", { src: "birds/" + a.illustrasjon, alt: "", loading: "lazy" }));
+    rad.appendChild(bilde);
     const midt = h("div", {});
-    midt.appendChild(h("div", { class: "kandidat-navn" }, a.navn));
+    midt.appendChild(h("button", {
+      class: "kandidat-navn", type: "button", onclick: () => visArt(a.id)
+    }, a.navn));
     midt.appendChild(h("div", { class: "kandidat-merke" },
       skille[a.id] || a.kjennetegn));
     if (state.ungfugl && a.ungfugl_avvik)
@@ -3318,10 +3553,15 @@ function tegnIdPanel() {
         "Kommer oftest til brettet i " +
         a.sesong_topp.map(m => MND[m - 1]).slice(0, 3).join(", ") + "."));
     rad.appendChild(midt);
-    rad.appendChild(h("button", {
+    const knapper = h("div", { class: "kandidat-knapper" });
+    knapper.appendChild(h("button", {
       class: "btn small primary", type: "button",
-      onclick: () => { loggFor(a.id); nullstillId(); }
+      onclick: () => { loggFor(a.id); nullstillId(); settIdApen(false); }
     }, "Det var den"));
+    knapper.appendChild(h("button", {
+      class: "btn small ghost", type: "button", onclick: () => visArt(a.id)
+    }, "Les mer"));
+    rad.appendChild(knapper);
     liste.appendChild(rad);
   });
   rot.appendChild(liste);
@@ -3332,13 +3572,150 @@ function tegnIdPanel() {
     "aria-pressed": state.ungfugl ? "true" : "false",
     onclick: () => { state.ungfugl = !state.ungfugl; lagre(); tegnAlt(); }
   }, "Det var en ungfugl"));
-  if (valgte.length)
+  if (alleKrav.length)
     bunn.appendChild(h("button", {
       class: "chip skip", type: "button", onclick: () => { nullstillId(); }
     }, "Start på nytt"));
   rot.appendChild(bunn);
 }
 function nullstillId() { state.idValg = {}; state.idHoppet = []; tegnAlt(); }
+
+/* ---------- stamgjestene ---------- */
+/* De tre han ser oftest, med ett trykk for et nytt besøk. Poenget er at
+   den vanlige handlingen — samme fugl som i går — ikke skal kreve at han
+   går gjennom nøkkelen en gang til. */
+function stamgjester() {
+  const antall = {}, sist = {};
+  state.obs.forEach(o => {
+    antall[o.art] = (antall[o.art] || 0) + 1;
+    if (!sist[o.art] || o.tid > sist[o.art]) sist[o.art] = o.tid;
+  });
+  return Object.keys(antall)
+    .filter(id => art(id))
+    .map(id => ({ a: art(id), n: antall[id], sist: sist[id] }))
+    .sort((x, y) => y.n - x.n || y.sist - x.sist)
+    .slice(0, 3);
+}
+
+function tegnStamPanel() {
+  const rot = document.getElementById("stam-body");
+  rot.textContent = "";
+  const topp = stamgjester();
+  if (!topp.length) {
+    rot.appendChild(h("p", { class: "panel-lede" },
+      "Her kommer de tre du ser oftest, så snart du har ført opp noen."));
+    return;
+  }
+  rot.appendChild(h("p", { class: "panel-lede" },
+    "De du ser oftest. Er den her igjen, holder det med ett trykk."));
+  const liste = h("ul", { class: "stamgjester" });
+  topp.forEach(({ a, n, sist }) => {
+    const kort = h("li", { class: "stam-kort" });
+    const bilde = h("button", {
+      class: "stam-bilde", type: "button",
+      "aria-label": "Les om " + a.navn, onclick: () => visArt(a.id)
+    });
+    bilde.appendChild(h("img", { src: "birds/" + a.illustrasjon, alt: "", loading: "lazy" }));
+    kort.appendChild(bilde);
+    kort.appendChild(h("button", {
+      class: "stam-navn kandidat-navn", type: "button", onclick: () => visArt(a.id)
+    }, a.navn));
+    kort.appendChild(h("div", { class: "stam-tall" },
+      n + " besøk · sist " + naerTid(new Date(sist))));
+    kort.appendChild(h("button", {
+      class: "btn small primary", type: "button", onclick: () => loggFor(a.id)
+    }, "Der var den igjen"));
+    liste.appendChild(kort);
+  });
+  rot.appendChild(liste);
+}
+
+/* ---------- artsvinduet ----------
+   Fakta og hans egne observasjoner i samme vindu: det er der spørsmålet
+   "når så jeg egentlig denne?" hører hjemme. Åpnes fra kandidatlisten,
+   fra stamgjestene og fra hver rad i loggen. */
+function visArt(id) {
+  const a = art(id);
+  if (!a) return;
+  const rot = document.getElementById("art-body");
+  rot.textContent = "";
+
+  const topp = h("div", { class: "art-topp" });
+  topp.appendChild(h("img", { src: "birds/" + a.illustrasjon, alt: "" }));
+  const tekst = h("div", {});
+  tekst.appendChild(h("h2", { id: "art-tittel" }, a.navn));
+  tekst.appendChild(h("div", { class: "art-kjennetegn" }, a.kjennetegn));
+  topp.appendChild(tekst);
+  rot.appendChild(topp);
+
+  rot.appendChild(h("p", {}, a.beskrivelse));
+
+  const fakta = [
+    ["Farger", a.farger.map(f => ordFor("farger", f)).join(", ")],
+    ["Størrelse", ordFor("storrelse", a.storrelse)],
+    ["Hode", ordFor("hode", a.hode)],
+    ["Bryst", ordFor("bryst", a.bryst)],
+    ["Nebb", ordFor("nebb", a.nebb)],
+    ["Slik oppfører den seg", a.atferd.map(v => ordFor("atferd", v)).join(". ")],
+    ["Hvor du ser den", a.sted.map(v => ordFor("sted", v)).join(", ")],
+    ["Spiser", a.for.join(", ")],
+    ["Oftest ved brettet", a.sesong_topp.map(m => MND[m - 1]).join(", ")],
+    ["Hvor vanlig", ordFor("sjeldenhet", a.sjeldenhet)]
+  ];
+  const dl = h("dl", { class: "fakta" });
+  fakta.forEach(([k, v]) => {
+    if (!v) return;
+    dl.appendChild(h("dt", {}, k));
+    dl.appendChild(h("dd", {}, v));
+  });
+  rot.appendChild(dl);
+
+  if (a.ungfugl_avvik) {
+    rot.appendChild(h("h3", {}, "Ungfugl"));
+    rot.appendChild(h("p", {}, a.ungfugl_avvik));
+  }
+
+  rot.appendChild(h("h3", {}, "Dine observasjoner"));
+  const mine = state.obs.filter(o => o.art === id).slice().sort((x, y) => y.tid - x.tid);
+  if (!mine.length) {
+    rot.appendChild(h("p", {}, "Du har ikke ført opp " + a.navn.toLowerCase() + " ennå."));
+  } else {
+    const forst = new Date(mine[mine.length - 1].tid);
+    const sist = new Date(mine[0].tid);
+    rot.appendChild(h("p", {}, mine.length === 1
+      ? "Én observasjon, " + datoTid(sist) + "."
+      : mine.length + " observasjoner. Første gang " + datoTid(forst) +
+        ", sist " + datoTid(sist) + "."));
+    const ul = h("ul", { class: "obs-liste" });
+    mine.slice(0, 60).forEach(o => {
+      const d = new Date(o.tid);
+      const li = h("li", { class: "obs-rad" });
+      li.appendChild(h("span", {}, dato(d)));
+      li.appendChild(h("time", { datetime: d.toISOString() }, klokke(d)));
+      ul.appendChild(li);
+    });
+    rot.appendChild(ul);
+  }
+
+  const rad = h("div", { class: "chips" });
+  rad.appendChild(h("button", {
+    class: "btn primary", type: "button",
+    onclick: () => { loggFor(id); visArt(id); }
+  }, mine.length ? "Der var den igjen" : "Jeg har sett denne"));
+  rot.appendChild(rad);
+
+  /* Er vinduet alt oppe (han trykket «Der var den igjen» inni det),
+     skal ikke fokuset og utløseren settes på nytt. */
+  if (document.getElementById("art-modal").hidden) {
+    aapne("art-modal");
+    /* Vinduet er langt. Sto fokuset på første knapp, som ligger nederst,
+       åpnet vinduet seg rullet til bunnen. Fokuset legges på selve
+       dialogen i stedet, så han begynner å lese på toppen. */
+    const boks = document.querySelector("#art-modal .modal");
+    boks.focus();
+    boks.scrollTop = 0;
+  }
+}
 
 /* ---------- hagen din ---------- */
 function tegnLoggPanel(v) {
@@ -3356,7 +3733,7 @@ function tegnLoggPanel(v) {
   rot.appendChild(mat);
   const matRad = h("div", { class: "chips" });
   matRad.appendChild(h("button", {
-    class: "chip", type: "button", onclick: () => aapne("mat-modal")
+    class: "chip", type: "button", onclick: aapneMat
   }, "Endre maten"));
   rot.appendChild(matRad);
 
@@ -3386,18 +3763,23 @@ function tegnLoggPanel(v) {
   stat.appendChild(s1); stat.appendChild(s2);
   rot.appendChild(stat);
 
-  /* loggen */
+  /* loggen. Navnet åpner artsvinduet, der fakta og alle gangene han har
+     sett den arten står sammen. */
+  rot.appendChild(h("p", { class: "panel-lede", style: "margin-top:.9rem" },
+    "Siste observasjoner. Trykk på navnet for å se arten og alle gangene " +
+    "du har sett den."));
   const liste = h("ul", { class: "logg-liste" });
   state.obs.slice(0, 40).forEach(o => {
     const a = art(o.art);
     if (!a) return;
     const rad = h("li", { class: "logg-rad" });
-    rad.appendChild(h("span", {}, a.navn));
+    rad.appendChild(h("button", {
+      class: "logg-navn", type: "button", onclick: () => visArt(a.id)
+    }, a.navn));
     const d = new Date(o.tid);
     const iDag = d.toDateString() === state.naa.toDateString();
     rad.appendChild(h("time", { datetime: d.toISOString() },
-      iDag ? "i dag " + klokke(d)
-           : d.getDate() + ". " + MND[d.getMonth()] + " " + klokke(d)));
+      iDag ? "i dag " + klokke(d) : dato(d) + " " + klokke(d)));
     rad.appendChild(h("button", {
       class: "logg-slett", type: "button", title: "Slett",
       "aria-label": "Slett observasjon av " + a.navn,
@@ -3495,12 +3877,12 @@ function tegnFor() {
       }));
     });
   }
-  /* talgboller henger i et nett under taket */
+  /* Talgbollen ligger på brettkanten. Den hang før i en snor fra x=700,
+     som er utenfor taket (594–686), så den så ut som en lampe i løse
+     lufta. Nå står den på plata, der den er synlig festet til noe. */
   if (state.mat.includes("talgboller")) {
-    ekstra.appendChild(el("line", { x1: 700, y1: 256, x2: 700, y2: 276,
-      stroke: "#6f6250", "stroke-width": 2 }));
-    ekstra.appendChild(el("circle", { cx: 700, cy: 288, r: 12, fill: "#e0d3a8" }));
-    ekstra.appendChild(el("circle", { cx: 700, cy: 288, r: 12, fill: "none",
+    ekstra.appendChild(el("circle", { cx: 680, cy: 308, r: 10, fill: "#e0d3a8" }));
+    ekstra.appendChild(el("circle", { cx: 680, cy: 308, r: 10, fill: "none",
       stroke: "#8a7a5a", "stroke-width": 1.4, "stroke-dasharray": "3 3" }));
   }
   if (state.mat.includes("eplebiter")) {
@@ -3516,7 +3898,12 @@ function tegnFor() {
   }
 }
 
-/* ---------- matdialogen ---------- */
+/* ---------- matdialogen ----------
+   Brikkene bygges når dialogen åpnes, ikke når siden lastes, så alle
+   veier inn må gå gjennom denne. «Endre maten» hoppet over den og viste
+   en tom dialog uten noe å velge. */
+function aapneMat() { tegnMatValg(); aapne("mat-modal"); }
+
 function tegnMatValg() {
   const rot = document.getElementById("mat-valg");
   rot.textContent = "";
@@ -3603,6 +3990,7 @@ function tegnAlt() {
   const v = vaerNaa();
   tegnVaerLag(v);
   tegnFugler();
+  tegnStamPanel();
   tegnIdPanel();
   tegnLoggPanel(v);
   tegnRytme();
@@ -3661,9 +4049,12 @@ function kobl() {
     fil.value = "";
   });
 
+  /* nøkkelen åpnes og lukkes fra overskriften sin */
+  document.getElementById("id-head")
+    .addEventListener("click", () => settIdApen(!state.idApen));
+
   /* brettet åpner matdialogen */
   const brett = document.getElementById("feeder");
-  const aapneMat = () => { tegnMatValg(); aapne("mat-modal"); };
   brett.addEventListener("click", aapneMat);
   brett.addEventListener("keydown", e => {
     if (e.key === "Enter" || e.key === " ") { e.preventDefault(); aapneMat(); }
