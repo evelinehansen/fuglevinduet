@@ -317,6 +317,14 @@ body {
 .mat-rad:first-of-type { border-top: 0; }
 .mat-rad b { color: var(--ink); font-weight: 600; }
 .mat-rad.selected b { color: var(--sage-deep); }
+.mat-fotnote { margin: 0.7rem 0 0; font-size: 0.82rem; color: var(--ink-faint);
+               line-height: 1.45; }
+
+/* Inne i et panel har boksen allerede en ramme rundt seg, og da blir
+   62ch-taket synlig som en skjev høyremarg: kanten stopper før kortet
+   gjør det. Løs tekst tåler det, en boks med strek rundt gjør ikke.
+   Panelet er selv smalt nok til å holde lesebredden. */
+.panel .raad { max-width: none; }
 
 .aktivitet { display: inline-flex; align-items: baseline; gap: 0.4rem; }
 .aktivitet b { font-family: var(--serif); font-weight: 600; }
@@ -3360,7 +3368,7 @@ const SOMMERRAAD = [
   "Vann betyr mer enn frø nå. Et grunt fat i skyggen, skiftet daglig, gjør mer for hagen i juli enn en full automat.",
   "Hekketid. Er det stille ved brettet, har de funnet insekter til ungene, og det er akkurat det de skal.",
   "Talgboller harskner i varmen. Heng dem i skyggen, og sett ut mindre om gangen.",
-  "Ungfugler fra juli av ligner ingenting i bøkene. Skru på Det var en ungfugl når du bestemmer."
+  "Ungfugler fra juli av ligner ingenting i bøkene. Skru på Det var en ungfugl når du registrerer en ny fugl for å se forskjellene."
 ];
 const AARETRUNDT = [
   "Rent brett er den billigste sykdomsforebyggingen som finnes. Skyll det innimellom.",
@@ -4104,6 +4112,19 @@ function tegnMatTabell() {
     rad.appendChild(document.createTextNode(deler.join(" ") + "."));
     rot.appendChild(rad);
   });
+
+  /* Spurvehauken spiser småfugler, og står derfor ikke på noen av listene
+     over. Uten denne linjen ser «29 av 30 arter» ut som en regnefeil selv
+     når alt er krysset av. Navnet hentes ut av dataene, ikke skrevet inn,
+     så linjen forsvinner av seg selv hvis maten deres blir kartlagt. */
+  const uten = ARTER.filter(a => !tiltrekkes(a, MATVALG)).map(a => a.navn);
+  if (uten.length)
+    rot.appendChild(h("p", { class: "mat-fotnote" },
+      uten.join(", ") + (uten.length === 1
+        ? " står ikke på noen av listene. Den kommer for småfuglene, ikke for maten."
+        : " står ikke på noen av listene. De kommer for småfuglene, ikke for maten.") +
+      " Derfor stopper tellingen over på " + (ARTER.length - uten.length) +
+      " av " + ARTER.length + " selv når alt er krysset av."));
 }
 
 /* ---------- er dette normalt ---------- */
