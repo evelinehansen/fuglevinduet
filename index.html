@@ -306,6 +306,18 @@ body {
   border-radius: 12px; font-size: 0.88rem; color: var(--sage-deep);
   max-width: var(--measure);
 }
+/* Oppslagslista under den grønne boksen: hva hver mat trekker, uansett
+   hva som er krysset av. Den grønne boksen sier hva som gjelder nå, denne
+   sier hva som finnes å velge mellom. */
+.mat-tabell { margin-top: 1.1rem; max-width: var(--measure); }
+.mat-tabell h3 { font-size: 0.9rem; margin: 0 0 0.15rem; }
+.mat-tabell .panel-lede { margin: 0 0 0.5rem; font-size: 0.85rem; }
+.mat-rad { font-size: 0.85rem; color: var(--ink-soft); line-height: 1.45;
+           padding: 0.4rem 0; border-top: 1px solid var(--line); }
+.mat-rad:first-of-type { border-top: 0; }
+.mat-rad b { color: var(--ink); font-weight: 600; }
+.mat-rad.selected b { color: var(--sage-deep); }
+
 .aktivitet { display: inline-flex; align-items: baseline; gap: 0.4rem; }
 .aktivitet b { font-family: var(--serif); font-weight: 600; }
 
@@ -568,6 +580,7 @@ footer.credits a { color: var(--ink-soft); }
     <p>Det du har ute avgjør hvem som kommer. Huk av det som står i hagen.</p>
     <div id="mat-valg" class="chips"></div>
     <div id="mat-folge"></div>
+    <div id="mat-tabell" class="mat-tabell"></div>
     <button class="btn modal-close">Lukk</button>
   </div>
 </div>
@@ -2421,7 +2434,7 @@ const SESONGLINJE = [
   "April. Hagen våkner. Færre ved brettet, mer i trærne.",
   "Mai. Bjørka springer ut, og de fleste har annet å gjøre enn å spise frø.",
   "Juni. Hekketid. Det er stille ved brettet og travelt i buskene.",
-  "Juli. Ungfugler overalt, og mange voksne ser slitne og halvt myte ut.",
+  "Juli. Ungfugler overalt, og mange voksne ser slitne og rufsete ut.",
   "August. Ungfuglene ligner ingenting i bøkene. Rogna begynner å modnes.",
   "September. Løvet snur, og flokkene begynner å samle seg igjen.",
   "Oktober. Brettet blir interessant igjen. Vinterfuglene kommer inn.",
@@ -3189,27 +3202,31 @@ function matDekning(mat) {
     linjer.push("Ute nå: " +
                 enkelt.map(e => e.m + " (" + e.n + (e.n === 1 ? " art)" : " arter)")).join(", ") +
                 ". Til sammen " + sum + " av 30 arter.");
-  if (mat.includes("vann"))
-    linjer.push("Vann trekker ingen art av seg selv, men det er ofte det " +
-                "vanskeligste å finne — særlig når alt er frosset.");
+  /* Vann er det eneste valget som ikke gir utslag på tellingen, så med
+     bare vann avkrysset sto boksen tom. Hvorfor det er slik, står i
+     oppslagslista under. */
+  if (!linjer.length && mat.includes("vann"))
+    linjer.push("Ute nå: vann. Det teller ingen arter av seg selv.");
   return linjer;
 }
 
-/* Ett forslag om gangen, aldri en liste over alt han kunne kjøpt. */
-function matforslag(mat) {
-  const mangler = MATVALG.filter(m => !mat.includes(m) && MAT_TIL_DATA[m].length);
-  let best = null, bestAntall = 0;
-  mangler.forEach(m => {
-    const nye = ARTER.filter(a => !tiltrekkes(a, mat) && tiltrekkes(a, mat.concat([m])));
-    if (nye.length > bestAntall) { bestAntall = nye.length; best = { mat: m, arter: nye }; }
-  });
-  if (!best) return null;
-  const navn = best.arter.slice(0, 3).map(a => a.navn.toLowerCase()).join(", ");
-  if (best.mat === "nigerfrø") {
-    return "Nigerfrø i en finmasket automat er den klassiske stillitsmaten. " +
-           "Grønnsisik tar det fra samme automat.";
-  }
-  return "Setter du ut " + best.mat + ", kan det trekke til seg " + navn + ".";
+/* Det som ikke går an å lese ut av artslistene. */
+const MAT_NOTAT = {
+  "nigerfrø": "krever finmasket automat",
+  "vann": "trekker ingen art av seg selv, men er ofte det vanskeligste å " +
+          "finne — særlig når alt er frosset"
+};
+
+/* Hele oppslaget, ikke ett forslag om gangen. Den gamle versjonen valgte
+   ut den ene maten som låste opp flest nye arter og nevnte tre av dem;
+   det svarte aldri på det nærliggende spørsmålet «hva trekker egentlig
+   hva?». Her står alle åtte, i samme rekkefølge som brikkene over. */
+function matoversikt() {
+  return MATVALG.map(m => ({
+    mat: m,
+    arter: ARTER.filter(a => tiltrekkes(a, [m])).map(a => a.navn),
+    notat: MAT_NOTAT[m] || null
+  }));
 }
 
 /* ============================================================
@@ -4060,13 +4077,33 @@ function tegnMatValg() {
   const linjer = state.mat.length ? matDekning(state.mat)
     : ["Ingenting krysset av ennå. Huk av det du har ute, så vet appen hvem " +
        "som kan komme."];
-  const forslag = matforslag(state.mat);
-  if (forslag) linjer.push(forslag);
-  else if (state.mat.length) linjer.push("Da er alt appen kjenner til dekket.");
   const boks = h("div", { class: "raad" });
   linjer.forEach((t, i) =>
     boks.appendChild(h("div", { style: i ? "margin-top:.5rem" : "" }, t)));
   følge.appendChild(boks);
+  tegnMatTabell();
+}
+
+/* Oppslagslista. Står stille uansett hva som er krysset av — bare den
+   uthevede maten flytter seg — så det går an å se hva som mangler før
+   man handler. */
+function tegnMatTabell() {
+  const rot = document.getElementById("mat-tabell");
+  rot.textContent = "";
+  rot.appendChild(h("h3", {}, "Hva de ulike matslagene trekker"));
+  rot.appendChild(h("p", { class: "panel-lede" },
+    "Hele oversikten, uavhengig av hva du har ute nå."));
+  matoversikt().forEach(o => {
+    const rad = h("div", {
+      class: "mat-rad" + (state.mat.includes(o.mat) ? " selected" : "")
+    });
+    rad.appendChild(h("b", {}, o.mat.charAt(0).toUpperCase() + o.mat.slice(1) + ": "));
+    const deler = [];
+    if (o.arter.length) deler.push(o.arter.join(", "));
+    if (o.notat) deler.push(o.arter.length ? "(" + o.notat + ")" : o.notat);
+    rad.appendChild(document.createTextNode(deler.join(" ") + "."));
+    rot.appendChild(rad);
+  });
 }
 
 /* ---------- er dette normalt ---------- */
