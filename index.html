@@ -377,9 +377,9 @@ footer.credits a { color: var(--ink-soft); }
   <header class="app-header">
     <h1 class="app-title">Fugle<span class="app-title-accent">vinduet</span></h1>
     <div class="header-right">
-      <span id="backup-status" class="backup-status">Sist sikkerhetskopi: aldri</span>
-      <button id="export-btn" class="btn">Eksporter</button>
-      <button id="import-btn" class="btn">Importer</button>
+      <span id="backup-status" class="backup-status">Siste backup: aldri</span>
+      <button id="export-btn" class="btn">Eksport</button>
+      <button id="import-btn" class="btn">Import</button>
       <input id="import-file" type="file" accept="application/json" hidden>
       <button id="about-btn" class="btn ghost small">Om</button>
     </div>
@@ -3470,11 +3470,11 @@ function importer(fil) {
 function backupTekst() {
   let t = null;
   try { t = parseInt(localStorage.getItem(NOKKEL_BACKUP) || "", 10); } catch (e) {}
-  if (!t || isNaN(t)) return "Sist sikkerhetskopi: aldri";
+  if (!t || isNaN(t)) return "Siste backup: aldri";
   const dager = Math.floor((Date.now() - t) / 86400000);
-  if (dager <= 0) return "Sist sikkerhetskopi: i dag";
-  if (dager === 1) return "Sist sikkerhetskopi: i går";
-  return "Sist sikkerhetskopi: for " + dager + " dager siden";
+  if (dager <= 0) return "Siste backup: i dag";
+  if (dager === 1) return "Siste backup: i går";
+  return "Siste backup: for " + dager + " dager siden";
 }
 
 /* ============================================================
